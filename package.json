@@ -1,0 +1,11 @@
+{
+  "name": "edu-ai-browser",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -n RENDERER,DESKTOP \"pnpm --filter ./apps/renderer dev\" \"wait-on http://localhost:3000 && pnpm --filter ./apps/desktop dev\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0",
+    "wait-on": "^7.0.0"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "@edu-ai-browser/desktop",
+  "private": true,
+  "type": "module",
+  "main": "dist/main.js",
+  "scripts": {
+    "dev": "pnpm build && cross-env NODE_ENV=development electronmon dist/main.js",
+    "build": "tsc -p tsconfig.json",
+    "start": "cross-env NODE_ENV=production electron dist/main.js"
+  },
+  "dependencies": {
+    "electron": "^31.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "cross-env": "^7.0.3",
+    "electronmon": "^2.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  }
+}
