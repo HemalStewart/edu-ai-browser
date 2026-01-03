@@ -3,3 +3,12 @@
 [00:00:03.731] Browser LOG     Navigate called
 [00:00:03.731] Browser LOG     Input value: https://react.dev/learn
 [00:00:03.731] Browser LOG     eduAPI available
+[00:04:48.606] Browser LOG     Navigate called
+[00:04:48.606] Browser LOG     Input value: google.com
+[00:04:48.606] Browser LOG     eduAPI available
+[00:05:15.335] Browser LOG     Navigate called
+[00:05:15.335] Browser LOG     Input value: google
+[00:05:15.335] Browser LOG     eduAPI available
+[00:05:19.693] Browser LOG     Navigate called
+[00:05:19.693] Browser LOG     Input value: https://google.com
+[00:05:19.693] Browser LOG     eduAPI available
