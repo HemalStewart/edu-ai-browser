@@ -109,30 +109,104 @@ function createWindow() {
   });
 
   // AI Chat Handler
-  ipcMain.handle("ai:chat", async (_, { messages, context }) => {
+  ipcMain.handle("ai:chat", async (_, payload) => {
     try {
-      const apiKey = process.env.GEMINI_API_KEY;
-      if (!apiKey) return "Please set GEMINI_API_KEY in .env file.";
+      const { messages, context, provider: requestedProvider } = (payload ?? {}) as {
+        messages?: Array<{ role: string; text: string }>;
+        context?: { title: string; content: string };
+        provider?: string;
+      };
 
-      const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+      if (!Array.isArray(messages) || messages.length === 0) {
+        return "Please send a question first.";
+      }
 
-      const chat = model.startChat({
-        history: messages.map((m: any) => ({
-          role: m.role === 'ai' ? 'model' : 'user', // Gemini uses 'model' instead of 'ai'
-          parts: [{ text: m.text }],
-        })),
-      });
+      const sanitizedHistory: Array<{ role: "ai" | "user"; text: string }> = [];
+      let hasSeenUser = false;
+
+      for (const msg of messages.slice(0, -1)) {
+        const normalizedRole = msg.role === "ai" ? "ai" : "user";
+
+        if (!hasSeenUser && normalizedRole === "ai") {
+          continue; // strip placeholder greetings so the history starts with the user
+        }
+
+        if (normalizedRole === "user") {
+          hasSeenUser = true;
+        }
+
+        sanitizedHistory.push({
+          role: normalizedRole,
+          text: msg.text,
+        });
+      }
 
       // Add context to the latest message if available
-      let prompt = messages[messages.length - 1].text;
+      const lastMessage = messages[messages.length - 1];
+      let prompt = lastMessage?.text ?? "";
       if (context) {
         prompt = `Context from current page(${context.title}): \n${context.content.substring(0, 5000)} \n\nUser Question: ${prompt} `;
       }
 
+      const provider =
+        (
+          requestedProvider ||
+          process.env.AI_PROVIDER ||
+          (process.env.OPENAI_API_KEY ? "openai" : "gemini")
+        ).toLowerCase();
+
+      if (provider === "openai") {
+        const openAiKey = process.env.OPENAI_API_KEY;
+        if (!openAiKey) return "Please set OPENAI_API_KEY in .env file.";
+
+        const openAiHistory = sanitizedHistory.map((msg) => ({
+          role: msg.role === "ai" ? "assistant" : "user",
+          content: msg.text,
+        }));
+
+        const openAiModel = process.env.OPENAI_MODEL || "gpt-4o-mini";
+        const response = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${openAiKey}`,
+          },
+          body: JSON.stringify({
+            model: openAiModel,
+            messages: [...openAiHistory, { role: "user", content: prompt }],
+          }),
+        });
+
+        if (!response.ok) {
+          const errorBody = await response.text();
+          throw new Error(`OpenAI request failed (${response.status}): ${errorBody}`);
+        }
+
+        const data: any = await response.json();
+        const completionText =
+          data.choices?.[0]?.message?.content ?? "I couldn't generate a response.";
+        return completionText;
+      }
+
+      const geminiKey = process.env.GEMINI_API_KEY;
+      if (!geminiKey) return "Please set GEMINI_API_KEY in .env file.";
+
+      const genAI = new GoogleGenerativeAI(geminiKey);
+      const modelName = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+      const model = genAI.getGenerativeModel({ model: modelName });
+
+      const geminiHistory = sanitizedHistory.map((msg) => ({
+        role: msg.role === "ai" ? "model" : "user",
+        parts: [{ text: msg.text }],
+      }));
+
+      const chat = model.startChat({
+        history: geminiHistory,
+      });
+
       const result = await chat.sendMessage(prompt);
-      const response = await result.response;
-      return response.text();
+      const geminiResponse = await result.response;
+      return geminiResponse.text();
     } catch (error) {
       console.error("AI Error:", error);
       return "Sorry, I encountered an error connecting to the AI.";

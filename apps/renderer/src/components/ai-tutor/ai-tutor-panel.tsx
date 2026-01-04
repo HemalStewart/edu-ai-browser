@@ -8,6 +8,8 @@ export function AITutorPanel({ onAnalyzePage }: AITutorPanelProps) {
     const [messages, setMessages] = React.useState<Array<{ role: 'ai' | 'user', text: string }>>([
         { role: 'ai', text: "Hello! I'm your AI Tutor. I can help you understand this validation logic. Would you like a summary of the active page?" }
     ]);
+    const initialProvider = (process.env.NEXT_PUBLIC_AI_PROVIDER_DEFAULT === "openai" ? "openai" : "gemini") as 'gemini' | 'openai';
+    const [provider, setProvider] = React.useState<'gemini' | 'openai'>(initialProvider);
 
     const handleAnalyze = async () => {
         if (onAnalyzePage) {
@@ -43,7 +45,7 @@ export function AITutorPanel({ onAnalyzePage }: AITutorPanelProps) {
 
         if (window.eduAPI) {
             try {
-                const response = await window.eduAPI.aiChat({ messages: newMessages, context });
+                const response = await window.eduAPI.aiChat({ messages: newMessages, context, provider });
                 setMessages(prev => [...prev, { role: 'ai', text: response }]);
             } catch (e) {
                 setMessages(prev => [...prev, { role: 'ai', text: "Error connecting to AI." }]);
@@ -55,16 +57,31 @@ export function AITutorPanel({ onAnalyzePage }: AITutorPanelProps) {
         if (e.key === 'Enter') handleSendMessage();
     }
 
+    const handleToggleProvider = () => {
+        const nextProvider = provider === 'gemini' ? 'openai' : 'gemini';
+        setProvider(nextProvider);
+        setMessages(prev => [...prev, {
+            role: 'ai',
+            text: `Switched to ${nextProvider === 'openai' ? 'OpenAI (GPT-4o Mini)' : 'Gemini (2.5 Flash)'}.`
+        }]);
+    };
+
+    const providerLabel = provider === 'openai' ? 'OpenAI (GPT-4o Mini)' : 'Gemini (2.5 Flash)';
+
     return (
         <div className="flex flex-col h-full">
             <div className="p-4 border-b border-white/10 flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-foreground">AI Tutor</h2>
                 <div className="flex gap-2 mt-3 flex-wrap">
-                    <span className="text-[11px] font-bold tracking-wide uppercase bg-blue-500/10 text-blue-600 px-3 py-1 rounded-full border border-blue-500/20">Gemini Pro</span>
+                    <span className="text-[11px] font-bold tracking-wide uppercase bg-blue-500/10 text-blue-600 px-3 py-1 rounded-full border border-blue-500/20">
+                        {providerLabel}
+                    </span>
                     <button onClick={handleAnalyze} className="text-[11px] font-bold tracking-wide uppercase bg-green-500/10 text-green-600 hover:bg-green-500/20 px-3 py-1 rounded-full border border-green-500/20 cursor-pointer transition-colors">
                         Read Page
                     </button>
-                    <span className="text-[11px] font-bold tracking-wide uppercase bg-white/40 text-foreground/60 px-3 py-1 rounded-full border border-white/10 cursor-pointer hover:bg-white/60 transition-colors">Change Model</span>
+                    <button onClick={handleToggleProvider} className="text-[11px] font-bold tracking-wide uppercase bg-white/40 text-foreground/60 px-3 py-1 rounded-full border border-white/10 cursor-pointer hover:bg-white/60 transition-colors">
+                        Switch Model
+                    </button>
                 </div>
             </div>
 

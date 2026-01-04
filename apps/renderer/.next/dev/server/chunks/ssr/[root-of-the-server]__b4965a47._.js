@@ -203,6 +203,8 @@ function AITutorPanel({ onAnalyzePage }) {
             text: "Hello! I'm your AI Tutor. I can help you understand this validation logic. Would you like a summary of the active page?"
         }
     ]);
+    const initialProvider = process.env.NEXT_PUBLIC_AI_PROVIDER_DEFAULT === "openai" ? "openai" : "gemini";
+    const [provider, setProvider] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$1$2e$1_$40$babel$2b$core$40$7$2e$28$2e$5_react$2d$dom$40$19$2e$2$2e$3_react$40$19$2e$2$2e$3_$5f$react$40$19$2e$2$2e$3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"].useState(initialProvider);
     const handleAnalyze = async ()=>{
         if (onAnalyzePage) {
             setMessages((prev)=>[
@@ -261,7 +263,8 @@ function AITutorPanel({ onAnalyzePage }) {
             try {
                 const response = await window.eduAPI.aiChat({
                     messages: newMessages,
-                    context
+                    context,
+                    provider
                 });
                 setMessages((prev)=>[
                         ...prev,
@@ -284,6 +287,18 @@ function AITutorPanel({ onAnalyzePage }) {
     const handleKeyDown = (e)=>{
         if (e.key === 'Enter') handleSendMessage();
     };
+    const handleToggleProvider = ()=>{
+        const nextProvider = provider === 'gemini' ? 'openai' : 'gemini';
+        setProvider(nextProvider);
+        setMessages((prev)=>[
+                ...prev,
+                {
+                    role: 'ai',
+                    text: `Switched to ${nextProvider === 'openai' ? 'OpenAI (GPT-4o Mini)' : 'Gemini (2.5 Flash)'}.`
+                }
+            ]);
+    };
+    const providerLabel = provider === 'openai' ? 'OpenAI (GPT-4o Mini)' : 'Gemini (2.5 Flash)';
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$1$2e$1_$40$babel$2b$core$40$7$2e$28$2e$5_react$2d$dom$40$19$2e$2$2e$3_react$40$19$2e$2$2e$3_$5f$react$40$19$2e$2$2e$3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
         className: "flex flex-col h-full",
         children: [
@@ -295,7 +310,7 @@ function AITutorPanel({ onAnalyzePage }) {
                         children: "AI Tutor"
                     }, void 0, false, {
                         fileName: "[project]/apps/renderer/src/components/ai-tutor/ai-tutor-panel.tsx",
-                        lineNumber: 61,
+                        lineNumber: 74,
                         columnNumber: 17
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$1$2e$1_$40$babel$2b$core$40$7$2e$28$2e$5_react$2d$dom$40$19$2e$2$2e$3_react$40$19$2e$2$2e$3_$5f$react$40$19$2e$2$2e$3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -303,10 +318,10 @@ function AITutorPanel({ onAnalyzePage }) {
                         children: [
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$1$2e$1_$40$babel$2b$core$40$7$2e$28$2e$5_react$2d$dom$40$19$2e$2$2e$3_react$40$19$2e$2$2e$3_$5f$react$40$19$2e$2$2e$3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                 className: "text-[11px] font-bold tracking-wide uppercase bg-blue-500/10 text-blue-600 px-3 py-1 rounded-full border border-blue-500/20",
-                                children: "Gemini Pro"
+                                children: providerLabel
                             }, void 0, false, {
                                 fileName: "[project]/apps/renderer/src/components/ai-tutor/ai-tutor-panel.tsx",
-                                lineNumber: 63,
+                                lineNumber: 76,
                                 columnNumber: 21
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$1$2e$1_$40$babel$2b$core$40$7$2e$28$2e$5_react$2d$dom$40$19$2e$2$2e$3_react$40$19$2e$2$2e$3_$5f$react$40$19$2e$2$2e$3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -315,27 +330,28 @@ function AITutorPanel({ onAnalyzePage }) {
                                 children: "Read Page"
                             }, void 0, false, {
                                 fileName: "[project]/apps/renderer/src/components/ai-tutor/ai-tutor-panel.tsx",
-                                lineNumber: 64,
+                                lineNumber: 79,
                                 columnNumber: 21
                             }, this),
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$1$2e$1_$40$babel$2b$core$40$7$2e$28$2e$5_react$2d$dom$40$19$2e$2$2e$3_react$40$19$2e$2$2e$3_$5f$react$40$19$2e$2$2e$3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$1$2e$1_$40$babel$2b$core$40$7$2e$28$2e$5_react$2d$dom$40$19$2e$2$2e$3_react$40$19$2e$2$2e$3_$5f$react$40$19$2e$2$2e$3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                onClick: handleToggleProvider,
                                 className: "text-[11px] font-bold tracking-wide uppercase bg-white/40 text-foreground/60 px-3 py-1 rounded-full border border-white/10 cursor-pointer hover:bg-white/60 transition-colors",
-                                children: "Change Model"
+                                children: "Switch Model"
                             }, void 0, false, {
                                 fileName: "[project]/apps/renderer/src/components/ai-tutor/ai-tutor-panel.tsx",
-                                lineNumber: 67,
+                                lineNumber: 82,
                                 columnNumber: 21
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/apps/renderer/src/components/ai-tutor/ai-tutor-panel.tsx",
-                        lineNumber: 62,
+                        lineNumber: 75,
                         columnNumber: 17
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/apps/renderer/src/components/ai-tutor/ai-tutor-panel.tsx",
-                lineNumber: 60,
+                lineNumber: 73,
                 columnNumber: 13
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$1$2e$1_$40$babel$2b$core$40$7$2e$28$2e$5_react$2d$dom$40$19$2e$2$2e$3_react$40$19$2e$2$2e$3_$5f$react$40$19$2e$2$2e$3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -349,7 +365,7 @@ function AITutorPanel({ onAnalyzePage }) {
                                 children: msg.text
                             }, void 0, false, {
                                 fileName: "[project]/apps/renderer/src/components/ai-tutor/ai-tutor-panel.tsx",
-                                lineNumber: 74,
+                                lineNumber: 91,
                                 columnNumber: 25
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$1$2e$1_$40$babel$2b$core$40$7$2e$28$2e$5_react$2d$dom$40$19$2e$2$2e$3_react$40$19$2e$2$2e$3_$5f$react$40$19$2e$2$2e$3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -357,18 +373,18 @@ function AITutorPanel({ onAnalyzePage }) {
                                 children: msg.role === 'ai' ? 'AI Tutor' : 'You'
                             }, void 0, false, {
                                 fileName: "[project]/apps/renderer/src/components/ai-tutor/ai-tutor-panel.tsx",
-                                lineNumber: 80,
+                                lineNumber: 97,
                                 columnNumber: 25
                             }, this)
                         ]
                     }, i, true, {
                         fileName: "[project]/apps/renderer/src/components/ai-tutor/ai-tutor-panel.tsx",
-                        lineNumber: 73,
+                        lineNumber: 90,
                         columnNumber: 21
                     }, this))
             }, void 0, false, {
                 fileName: "[project]/apps/renderer/src/components/ai-tutor/ai-tutor-panel.tsx",
-                lineNumber: 71,
+                lineNumber: 88,
                 columnNumber: 13
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$1$2e$1_$40$babel$2b$core$40$7$2e$28$2e$5_react$2d$dom$40$19$2e$2$2e$3_react$40$19$2e$2$2e$3_$5f$react$40$19$2e$2$2e$3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -383,7 +399,7 @@ function AITutorPanel({ onAnalyzePage }) {
                             placeholder: "Ask a question..."
                         }, void 0, false, {
                             fileName: "[project]/apps/renderer/src/components/ai-tutor/ai-tutor-panel.tsx",
-                            lineNumber: 89,
+                            lineNumber: 106,
                             columnNumber: 21
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$1$2e$1_$40$babel$2b$core$40$7$2e$28$2e$5_react$2d$dom$40$19$2e$2$2e$3_react$40$19$2e$2$2e$3_$5f$react$40$19$2e$2$2e$3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -403,34 +419,34 @@ function AITutorPanel({ onAnalyzePage }) {
                                     strokeLinejoin: "round"
                                 }, void 0, false, {
                                     fileName: "[project]/apps/renderer/src/components/ai-tutor/ai-tutor-panel.tsx",
-                                    lineNumber: 97,
+                                    lineNumber: 114,
                                     columnNumber: 29
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/apps/renderer/src/components/ai-tutor/ai-tutor-panel.tsx",
-                                lineNumber: 96,
+                                lineNumber: 113,
                                 columnNumber: 25
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/apps/renderer/src/components/ai-tutor/ai-tutor-panel.tsx",
-                            lineNumber: 95,
+                            lineNumber: 112,
                             columnNumber: 21
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/apps/renderer/src/components/ai-tutor/ai-tutor-panel.tsx",
-                    lineNumber: 88,
+                    lineNumber: 105,
                     columnNumber: 17
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/apps/renderer/src/components/ai-tutor/ai-tutor-panel.tsx",
-                lineNumber: 87,
+                lineNumber: 104,
                 columnNumber: 13
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/apps/renderer/src/components/ai-tutor/ai-tutor-panel.tsx",
-        lineNumber: 59,
+        lineNumber: 72,
         columnNumber: 9
     }, this);
 }
