@@ -6,6 +6,7 @@ export interface IElectronAPI {
     forward: () => void;
     refresh: () => void;
     extractText: () => Promise<{ title: string; content: string; selection?: boolean; error?: string }>;
+    aiChat: (payload: { messages: Array<{ role: string, text: string }>, context?: { title: string, content: string } }) => Promise<string>;
 }
 
 declare global {

@@ -226,9 +226,10 @@ function AITutorPanel({ onAnalyzePage }) {
                         ...prev,
                         {
                             role: 'ai',
-                            text: `I've read the page: "${data.title}". It has ${data.content.length} characters. What would you like to know?`
+                            text: `I've read the page: "${data.title}".\n\nI can answer questions about it now.`
                         }
                     ]);
+            // Ideally store 'data' in state to pass as context later
             } else {
                 setMessages((prev)=>[
                         ...prev,
@@ -239,6 +240,57 @@ function AITutorPanel({ onAnalyzePage }) {
                     ]);
             }
         }
+    };
+    const handleSendMessage = async ()=>{
+        const input = document.getElementById('ai-input');
+        if (!input || !input.value.trim()) return;
+        const userText = input.value;
+        input.value = ''; // Clear input
+        // Add user message to UI
+        const newMessages = [
+            ...messages,
+            {
+                role: 'user',
+                text: userText
+            }
+        ];
+        setMessages(newMessages);
+        // Get context if available (you might want to store this in state from handleAnalyze)
+        let context = undefined;
+        if (onAnalyzePage) {
+            // Quick hack: re-extract text for every message for freshness
+            const data = await onAnalyzePage();
+            if (data) context = {
+                title: data.title,
+                content: data.content
+            };
+        }
+        if (window.eduAPI) {
+            try {
+                const response = await window.eduAPI.aiChat({
+                    messages: newMessages,
+                    context
+                });
+                setMessages((prev)=>[
+                        ...prev,
+                        {
+                            role: 'ai',
+                            text: response
+                        }
+                    ]);
+            } catch (e) {
+                setMessages((prev)=>[
+                        ...prev,
+                        {
+                            role: 'ai',
+                            text: "Error connecting to AI."
+                        }
+                    ]);
+            }
+        }
+    };
+    const handleKeyDown = (e)=>{
+        if (e.key === 'Enter') handleSendMessage();
     };
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$1$2e$1_$40$babel$2b$core$40$7$2e$28$2e$5_react$2d$dom$40$19$2e$2$2e$3_react$40$19$2e$2$2e$3_$5f$react$40$19$2e$2$2e$3$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
         className: "flex flex-col h-full",
@@ -251,7 +303,7 @@ function AITutorPanel({ onAnalyzePage }) {
                         children: "AI Tutor"
                     }, void 0, false, {
                         fileName: "[project]/apps/renderer/src/components/ai-tutor/ai-tutor-panel.tsx",
-                        lineNumber: 27,
+                        lineNumber: 61,
                         columnNumber: 17
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$1$2e$1_$40$babel$2b$core$40$7$2e$28$2e$5_react$2d$dom$40$19$2e$2$2e$3_react$40$19$2e$2$2e$3_$5f$react$40$19$2e$2$2e$3$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -262,7 +314,7 @@ function AITutorPanel({ onAnalyzePage }) {
                                 children: "Gemini Pro"
                             }, void 0, false, {
                                 fileName: "[project]/apps/renderer/src/components/ai-tutor/ai-tutor-panel.tsx",
-                                lineNumber: 29,
+                                lineNumber: 63,
                                 columnNumber: 21
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$1$2e$1_$40$babel$2b$core$40$7$2e$28$2e$5_react$2d$dom$40$19$2e$2$2e$3_react$40$19$2e$2$2e$3_$5f$react$40$19$2e$2$2e$3$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -271,7 +323,7 @@ function AITutorPanel({ onAnalyzePage }) {
                                 children: "Read Page"
                             }, void 0, false, {
                                 fileName: "[project]/apps/renderer/src/components/ai-tutor/ai-tutor-panel.tsx",
-                                lineNumber: 30,
+                                lineNumber: 64,
                                 columnNumber: 21
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$1$2e$1_$40$babel$2b$core$40$7$2e$28$2e$5_react$2d$dom$40$19$2e$2$2e$3_react$40$19$2e$2$2e$3_$5f$react$40$19$2e$2$2e$3$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -279,19 +331,19 @@ function AITutorPanel({ onAnalyzePage }) {
                                 children: "Change Model"
                             }, void 0, false, {
                                 fileName: "[project]/apps/renderer/src/components/ai-tutor/ai-tutor-panel.tsx",
-                                lineNumber: 33,
+                                lineNumber: 67,
                                 columnNumber: 21
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/apps/renderer/src/components/ai-tutor/ai-tutor-panel.tsx",
-                        lineNumber: 28,
+                        lineNumber: 62,
                         columnNumber: 17
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/apps/renderer/src/components/ai-tutor/ai-tutor-panel.tsx",
-                lineNumber: 26,
+                lineNumber: 60,
                 columnNumber: 13
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$1$2e$1_$40$babel$2b$core$40$7$2e$28$2e$5_react$2d$dom$40$19$2e$2$2e$3_react$40$19$2e$2$2e$3_$5f$react$40$19$2e$2$2e$3$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -305,7 +357,7 @@ function AITutorPanel({ onAnalyzePage }) {
                                 children: msg.text
                             }, void 0, false, {
                                 fileName: "[project]/apps/renderer/src/components/ai-tutor/ai-tutor-panel.tsx",
-                                lineNumber: 40,
+                                lineNumber: 74,
                                 columnNumber: 25
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$1$2e$1_$40$babel$2b$core$40$7$2e$28$2e$5_react$2d$dom$40$19$2e$2$2e$3_react$40$19$2e$2$2e$3_$5f$react$40$19$2e$2$2e$3$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -313,18 +365,18 @@ function AITutorPanel({ onAnalyzePage }) {
                                 children: msg.role === 'ai' ? 'AI Tutor' : 'You'
                             }, void 0, false, {
                                 fileName: "[project]/apps/renderer/src/components/ai-tutor/ai-tutor-panel.tsx",
-                                lineNumber: 46,
+                                lineNumber: 80,
                                 columnNumber: 25
                             }, this)
                         ]
                     }, i, true, {
                         fileName: "[project]/apps/renderer/src/components/ai-tutor/ai-tutor-panel.tsx",
-                        lineNumber: 39,
+                        lineNumber: 73,
                         columnNumber: 21
                     }, this))
             }, void 0, false, {
                 fileName: "[project]/apps/renderer/src/components/ai-tutor/ai-tutor-panel.tsx",
-                lineNumber: 37,
+                lineNumber: 71,
                 columnNumber: 13
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$1$2e$1_$40$babel$2b$core$40$7$2e$28$2e$5_react$2d$dom$40$19$2e$2$2e$3_react$40$19$2e$2$2e$3_$5f$react$40$19$2e$2$2e$3$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -333,14 +385,17 @@ function AITutorPanel({ onAnalyzePage }) {
                     className: "relative group",
                     children: [
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$1$2e$1_$40$babel$2b$core$40$7$2e$28$2e$5_react$2d$dom$40$19$2e$2$2e$3_react$40$19$2e$2$2e$3_$5f$react$40$19$2e$2$2e$3$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
+                            id: "ai-input",
+                            onKeyDown: handleKeyDown,
                             className: "w-full bg-white/60 border-none backdrop-blur-md rounded-full py-4 pl-6 pr-12 text-sm shadow-sm transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:bg-white/90 placeholder:text-foreground/40",
                             placeholder: "Ask a question..."
                         }, void 0, false, {
                             fileName: "[project]/apps/renderer/src/components/ai-tutor/ai-tutor-panel.tsx",
-                            lineNumber: 55,
+                            lineNumber: 89,
                             columnNumber: 21
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$1$2e$1_$40$babel$2b$core$40$7$2e$28$2e$5_react$2d$dom$40$19$2e$2$2e$3_react$40$19$2e$2$2e$3_$5f$react$40$19$2e$2$2e$3$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                            onClick: handleSendMessage,
                             className: "absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-blue-500 rounded-full text-white shadow-lg hover:scale-105 active:scale-95 transition-all",
                             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$1$2e$1_$40$babel$2b$core$40$7$2e$28$2e$5_react$2d$dom$40$19$2e$2$2e$3_react$40$19$2e$2$2e$3_$5f$react$40$19$2e$2$2e$3$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
                                 width: "18",
@@ -356,34 +411,34 @@ function AITutorPanel({ onAnalyzePage }) {
                                     strokeLinejoin: "round"
                                 }, void 0, false, {
                                     fileName: "[project]/apps/renderer/src/components/ai-tutor/ai-tutor-panel.tsx",
-                                    lineNumber: 61,
+                                    lineNumber: 97,
                                     columnNumber: 29
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/apps/renderer/src/components/ai-tutor/ai-tutor-panel.tsx",
-                                lineNumber: 60,
+                                lineNumber: 96,
                                 columnNumber: 25
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/apps/renderer/src/components/ai-tutor/ai-tutor-panel.tsx",
-                            lineNumber: 59,
+                            lineNumber: 95,
                             columnNumber: 21
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/apps/renderer/src/components/ai-tutor/ai-tutor-panel.tsx",
-                    lineNumber: 54,
+                    lineNumber: 88,
                     columnNumber: 17
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/apps/renderer/src/components/ai-tutor/ai-tutor-panel.tsx",
-                lineNumber: 53,
+                lineNumber: 87,
                 columnNumber: 13
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/apps/renderer/src/components/ai-tutor/ai-tutor-panel.tsx",
-        lineNumber: 25,
+        lineNumber: 59,
         columnNumber: 9
     }, this);
 }

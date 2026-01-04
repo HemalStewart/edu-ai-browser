@@ -12,4 +12,5 @@ contextBridge.exposeInMainWorld("eduAPI", {
   forward: () => ipcRenderer.send("browser-view:forward"),
   refresh: () => ipcRenderer.send("browser-view:refresh"),
   extractText: () => ipcRenderer.invoke("browser-view:extract-text"),
+  aiChat: (payload: any) => ipcRenderer.invoke("ai:chat", payload),
 });
