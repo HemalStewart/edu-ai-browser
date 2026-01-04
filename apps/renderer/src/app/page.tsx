@@ -54,6 +54,12 @@ interface LearningPath {
 
 type IconName = "search" | "arrow-left" | "arrow-right" | "refresh";
 
+type ReaderExplainState =
+  | { status: "idle"; text?: undefined; response?: undefined }
+  | { status: "loading"; text: string; response?: undefined }
+  | { status: "ready"; text: string; response: string }
+  | { status: "error"; text: string; response?: undefined };
+
 const Icon = ({ name, className }: { name: IconName; className?: string }) => {
   switch (name) {
     case "search":
@@ -293,6 +299,13 @@ export default function Home() {
   const [tutorCollapsed, setTutorCollapsed] = useState(true);
   const [toolInFlight, setToolInFlight] = useState<string | null>(null);
   const [toolResult, setToolResult] = useState<{ title: string; detail: string } | null>(null);
+  const [readerMode, setReaderMode] = useState(false);
+  const [readerLoading, setReaderLoading] = useState(false);
+  const [readerContext, setReaderContext] = useState<{ title: string; content: string } | null>(null);
+  const [readerHighlights, setReaderHighlights] = useState<Set<string>>(new Set());
+  const [readerSyncedAt, setReaderSyncedAt] = useState<string | null>(null);
+  const [selectionText, setSelectionText] = useState("");
+  const [readerExplainState, setReaderExplainState] = useState<ReaderExplainState>({ status: "idle" });
 
   const nextSessionId = () => {
     sessionCounterRef.current += 1;
@@ -317,6 +330,88 @@ export default function Home() {
   const prevPeekFallback = (peek: string) =>
     peek || "Your reading summary will show up once you extract a page.";
 
+  const defaultAiProvider =
+    typeof process !== "undefined" && process.env.NEXT_PUBLIC_AI_PROVIDER_DEFAULT === "openai"
+      ? "openai"
+      : "gemini";
+
+  const deriveHighlights = (body: string) => {
+    const sentences = body.match(/[^.!?]+[.!?]/g) ?? [];
+    const scored = sentences
+      .map((sentence) => {
+        const trimmed = sentence.trim();
+        const wordCount = trimmed.split(/\s+/).length;
+        return {
+          sentence: trimmed,
+          score: wordCount + (trimmed.includes(",") ? 2 : 0) + (trimmed.length > 120 ? 4 : 0),
+        };
+      })
+      .filter((entry) => entry.sentence.length > 40);
+    const topSentences = scored
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5)
+      .map((entry) => entry.sentence);
+    return new Set(topSentences);
+  };
+
+  const refreshReaderContext = async () => {
+    setReaderLoading(true);
+    try {
+      const context = await fetchPageContext();
+      if (context && context.content) {
+        setReaderContext({ title: context.title || currentSession.title, content: context.content });
+        setReaderHighlights(deriveHighlights(context.content));
+        setReaderSyncedAt(new Date().toISOString());
+      }
+    } finally {
+      setReaderLoading(false);
+    }
+  };
+
+  const handleReaderToggle = async () => {
+    if (readerMode) {
+      setReaderMode(false);
+      setSelectionText("");
+      setReaderExplainState({ status: "idle" });
+      return;
+    }
+    setReaderMode(true);
+    await refreshReaderContext();
+  };
+
+  const handleReaderSelection = () => {
+    if (typeof window === "undefined") return;
+    const selection = window.getSelection();
+    const text = selection?.toString().trim() ?? "";
+    if (text.length > 12) {
+      setSelectionText(text.slice(0, 1500));
+      setReaderExplainState({ status: "idle" });
+    } else {
+      setSelectionText("");
+      setReaderExplainState({ status: "idle" });
+    }
+  };
+
+  const handleExplainSelection = async () => {
+    if (!selectionText || typeof window === "undefined" || !window.eduAPI) return;
+    setReaderExplainState({ status: "loading", text: selectionText });
+    try {
+      const response = await window.eduAPI.aiChat({
+        messages: [
+          {
+            role: "user",
+            text: `Explain the following passage for a student:\n\n${selectionText}`,
+          },
+        ],
+        provider: defaultAiProvider,
+      });
+      setReaderExplainState({ status: "ready", text: selectionText, response });
+    } catch (error) {
+      console.error("Explain selection failed:", error);
+      setReaderExplainState({ status: "error", text: selectionText });
+    }
+  };
+
   const fetchPageContext = async () => {
     if (typeof window === "undefined" || !window.eduAPI) return null;
     try {
@@ -329,7 +424,16 @@ export default function Home() {
 
   // Handle BrowserView resizing
   useEffect(() => {
-    if (!browserContainerRef.current || typeof window === "undefined" || !window.eduAPI) return;
+    if (typeof window === "undefined" || !window.eduAPI) return;
+
+    if (readerMode) {
+      window.eduAPI.resizeBrowserView({ x: 0, y: 0, width: 0, height: 0 });
+      return () => {
+        window.eduAPI.resizeBrowserView({ x: 0, y: 0, width: 0, height: 0 });
+      };
+    }
+
+    if (!browserContainerRef.current) return;
 
     const updateBounds = () => {
       if (!browserContainerRef.current) return;
@@ -358,7 +462,7 @@ export default function Home() {
         window.eduAPI.resizeBrowserView({ x: 0, y: 0, width: 0, height: 0 });
       }
     };
-  }, [libraryCollapsed, tutorCollapsed]);
+  }, [libraryCollapsed, tutorCollapsed, readerMode]);
 
 
   const navigate = (targetOverride?: string) => {
@@ -489,6 +593,23 @@ export default function Home() {
     });
   };
 
+  const readerParagraphs = readerContext
+    ? readerContext.content
+      .split(/\n{2,}/)
+      .map((paragraph) => paragraph.trim())
+      .filter(Boolean)
+    : [];
+
+  const readerSyncedLabel = readerSyncedAt
+    ? `Synced ${new Intl.DateTimeFormat("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(new Date(readerSyncedAt))}`
+    : "Not synced yet";
+
+  const selectionPreview =
+    selectionText.length > 200 ? `${selectionText.slice(0, 200)}…` : selectionText;
+
   return (
     <WorkspaceLayout
       leftPanel={
@@ -587,6 +708,16 @@ export default function Home() {
               >
                 {libraryCollapsed && tutorCollapsed ? "Show workspace" : "Focus on page"}
               </button>
+              <button
+                type="button"
+                onClick={handleReaderToggle}
+                className={`px-4 py-2 rounded-2xl text-xs font-semibold border transition-spring ${readerMode
+                  ? "border-blue-500/70 text-blue-600 glass-medium shadow-sm"
+                  : "border-white/70 text-foreground/70 glass-ultra hover:text-foreground"
+                  }`}
+              >
+                {readerMode ? "Close Reader" : "Reader Mode"}
+              </button>
             </div>
           </div>
 
@@ -612,13 +743,128 @@ export default function Home() {
 
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className="flex-1 w-full relative" ref={browserContainerRef}>
-            <div className="absolute inset-0 flex items-center justify-center text-muted-foreground pointer-events-none select-none">
-              {/* BrowserView overlays this region */}
-              <div className="text-center pointer-events-none select-none">
-                <p className="text-lg font-semibold text-foreground/40">Loading browser surface…</p>
-                <p className="text-sm text-foreground/30">Use the address field or quick cards to open a site.</p>
+            {!readerMode && (
+              <div className="absolute inset-0 flex items-center justify-center text-muted-foreground pointer-events-none select-none">
+                {/* BrowserView overlays this region */}
+                <div className="text-center pointer-events-none select-none">
+                  <p className="text-lg font-semibold text-foreground/40">Loading browser surface…</p>
+                  <p className="text-sm text-foreground/30">
+                    Use the address field or quick cards to open a site.
+                  </p>
+                </div>
               </div>
-            </div>
+            )}
+
+            {readerMode && (
+              <div className="absolute inset-0 z-10 bg-white/95 text-foreground flex flex-col shadow-2xl">
+                <div className="px-6 py-4 border-b border-black/5 flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-foreground/40">
+                      Reader Mode
+                    </p>
+                    <p className="text-lg font-semibold text-foreground">
+                      {readerContext?.title || currentSession.title}
+                    </p>
+                    <p className="text-xs text-foreground/60">{readerSyncedLabel}</p>
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                      type="button"
+                      disabled={readerLoading}
+                      onClick={refreshReaderContext}
+                      className={`px-4 py-2 rounded-2xl text-xs font-semibold border transition-spring ${readerLoading
+                        ? "border-foreground/20 text-foreground/40 cursor-not-allowed"
+                        : "border-blue-500/60 text-blue-600 glass-ultra hover:-translate-y-0.5"
+                        }`}
+                    >
+                      {readerLoading ? "Syncing…" : "Resync"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleReaderToggle}
+                      className="px-4 py-2 rounded-2xl text-xs font-semibold border border-foreground/10 glass-ultra text-foreground/70 hover:text-foreground transition-spring"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+
+                <div
+                  className="flex-1 overflow-y-auto px-6 py-4 space-y-4"
+                  onMouseUp={handleReaderSelection}
+                >
+                  {readerLoading && (
+                    <div className="rounded-2xl border border-dashed border-foreground/10 p-6 text-sm text-foreground/60">
+                      Extracting the latest copy of this page…
+                    </div>
+                  )}
+                  {!readerLoading && readerParagraphs.length === 0 && (
+                    <div className="rounded-2xl border border-dashed border-foreground/10 p-6 text-sm text-foreground/60">
+                      Load a page and choose “Resync” to populate Reader Mode with clean text.
+                    </div>
+                  )}
+                  {!readerLoading &&
+                    readerParagraphs.map((paragraph, index) => {
+                      const sentences = paragraph.match(/[^.!?]+[.!?]?/g) ?? [paragraph];
+                      return (
+                        <p key={`${paragraph}-${index}`} className="text-base leading-7 text-foreground/80">
+                          {sentences.map((sentence, idx) => {
+                            const trimmed = sentence.trim();
+                            if (!trimmed) return null;
+                            const isHighlight = readerHighlights.has(trimmed);
+                            return (
+                              <span
+                                key={`${trimmed}-${idx}`}
+                                className={`${isHighlight
+                                  ? "bg-amber-100/70 text-foreground px-1 rounded-md shadow-[inset_0_1px_6px_rgba(0,0,0,0.08)]"
+                                  : ""
+                                  }`}
+                              >
+                                {trimmed + " "}
+                              </span>
+                            );
+                          })}
+                        </p>
+                      );
+                    })}
+                </div>
+
+                {selectionText && (
+                  <div className="border-t border-black/5 bg-white/95 px-6 py-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-foreground/40">
+                        Selection
+                      </p>
+                      {readerExplainState.status === "ready" && (
+                        <span className="text-[10px] font-semibold text-foreground/50">Explained</span>
+                      )}
+                    </div>
+                    <p className="text-sm text-foreground/70 italic">“{selectionPreview}”</p>
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={handleExplainSelection}
+                        disabled={readerExplainState.status === "loading"}
+                        className={`px-4 py-2 rounded-2xl text-xs font-semibold border transition-spring ${readerExplainState.status === "loading"
+                          ? "border-foreground/20 text-foreground/40 cursor-not-allowed"
+                          : "border-emerald-500/50 text-emerald-600 glass-ultra hover:-translate-y-0.5"
+                          }`}
+                      >
+                        {readerExplainState.status === "loading" ? "Explaining…" : "Explain selection"}
+                      </button>
+                      {readerExplainState.status === "error" && (
+                        <span className="text-xs text-red-500 font-semibold">Something went wrong.</span>
+                      )}
+                    </div>
+                    {readerExplainState.status === "ready" && (
+                      <div className="rounded-2xl glass-ultra border border-white/70 p-3 text-sm text-foreground/80">
+                        {readerExplainState.response}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

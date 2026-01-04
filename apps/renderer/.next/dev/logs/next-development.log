@@ -68,3 +68,15 @@ Incoming: %s useEffect [] [false, true]
 [02:26:27.547] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
 [02:28:49.970] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
 [02:30:09.788] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[03:46:19.842] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[03:50:05.505] Server  LOG     ✓ Compiled in 27ms
+[03:50:29.309] Server  LOG     ✓ Compiled in 17ms
+[03:50:29.370] Browser ERROR   The final argument passed to %s changed size between renders. The order and size of this array must remain constant.
+
+Previous: %s
+Incoming: %s useEffect [true, true] [true, true, false]
+[03:50:38.460] Server  LOG     ✓ Compiled in 28ms
+[03:51:01.488] Server  LOG     ✓ Compiled in 14ms
+[03:51:13.293] Server  LOG     ✓ Compiled in 21ms
+[03:51:33.762] Server  LOG     ✓ Compiled in 21ms
+[03:51:50.531] Server  LOG     ✓ Compiled in 13ms
