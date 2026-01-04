@@ -47,7 +47,8 @@ export function AITutorPanel({ onAnalyzePage }: AITutorPanelProps) {
             try {
                 const response = await window.eduAPI.aiChat({ messages: newMessages, context, provider });
                 setMessages(prev => [...prev, { role: 'ai', text: response }]);
-            } catch (e) {
+            } catch (error) {
+                console.error("AI chat failed:", error);
                 setMessages(prev => [...prev, { role: 'ai', text: "Error connecting to AI." }]);
             }
         }

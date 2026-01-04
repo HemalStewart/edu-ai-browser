@@ -4,18 +4,28 @@ interface WorkspaceLayoutProps {
     leftPanel: React.ReactNode;
     rightPanel: React.ReactNode;
     children: React.ReactNode;
+    hideLeftPanel?: boolean;
+    hideRightPanel?: boolean;
 }
 
 export function WorkspaceLayout({
     leftPanel,
     rightPanel,
     children,
+    hideLeftPanel = false,
+    hideRightPanel = false,
 }: WorkspaceLayoutProps) {
     return (
         <div className="flex h-screen w-screen overflow-hidden p-3 gap-3">
             {/* Left Panel: Library */}
-            <aside className="w-72 flex-shrink-0 glass-panel rounded-3xl overflow-hidden flex flex-col transition-all duration-300 hover:shadow-lg">
-                {leftPanel}
+            <aside
+                className={`flex-shrink-0 overflow-hidden flex flex-col transition-all duration-300 ${
+                    hideLeftPanel
+                        ? "w-0 opacity-0 pointer-events-none"
+                        : "w-[360px] glass-panel rounded-3xl hover:shadow-lg"
+                }`}
+            >
+                {!hideLeftPanel && leftPanel}
             </aside>
 
             {/* Center Panel: Reader/Browser - Opaque center for readability, but rounded */}
@@ -24,8 +34,14 @@ export function WorkspaceLayout({
             </main>
 
             {/* Right Panel: AI Tutor */}
-            <aside className="w-[420px] flex-shrink-0 glass-panel rounded-3xl overflow-hidden flex flex-col transition-all duration-300 hover:shadow-lg">
-                {rightPanel}
+            <aside
+                className={`flex-shrink-0 overflow-hidden flex flex-col transition-all duration-300 ${
+                    hideRightPanel
+                        ? "w-0 opacity-0 pointer-events-none"
+                        : "w-[420px] glass-panel rounded-3xl hover:shadow-lg"
+                }`}
+            >
+                {!hideRightPanel && rightPanel}
             </aside>
         </div>
     );
