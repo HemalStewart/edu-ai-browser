@@ -1,220 +1,37 @@
-[00:00:00.566] Server  LOG     ✓ Ready in 399ms
-[00:00:02.193] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:04:23.429] Server  LOG     ✓ Compiled in 234ms
-[00:04:33.331] Server  LOG     ✓ Compiled in 16ms
-[00:04:45.008] Server  LOG     ✓ Compiled in 13ms
-[00:04:53.177] Server  LOG     ✓ Compiled in 22ms
-[00:04:53.657] Browser ERROR   ./apps/renderer/src/app/page.tsx:804:11
-Parsing ecmascript source code failed
-  802 |               {renderCommandContent()}
-  803 |             </section>
-> 804 |           }
-      |           ^
-  805 |
-  806 |           <div className="flex-1 w-full relative border-t border-white/30 rounded-b-3xl" ref={browserContainerRef}>
-  807 |             <div className="absolute inset-0 flex items-center justify-center text-muted-foreground pointer-events-none select-none">
-
-Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
-
-Import traces:
-  Client Component Browser:
-    ./apps/renderer/src/app/page.tsx [Client Component Browser]
-    ./apps/renderer/src/app/page.tsx [Server Component]
-
-  Client Component SSR:
-    ./apps/renderer/src/app/page.tsx [Client Component SSR]
-    ./apps/renderer/src/app/page.tsx [Server Component]
-[00:05:02.508] Browser ERROR   ./apps/renderer/src/app/page.tsx:804:12
-Parsing ecmascript source code failed
-  802 |               {renderCommandContent()}
-  803 |             </section>
-> 804 |           )}
-      |            ^
-  805 |
-  806 |           <div className="flex-1 w-full relative border-t border-white/30 rounded-b-3xl" ref={browserContainerRef}>
-  807 |             <div className="absolute inset-0 flex items-center justify-center text-muted-foreground pointer-events-none select-none">
-
-Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
-
-Import traces:
-  Client Component Browser:
-    ./apps/renderer/src/app/page.tsx [Client Component Browser]
-    ./apps/renderer/src/app/page.tsx [Server Component]
-
-  Client Component SSR:
-    ./apps/renderer/src/app/page.tsx [Client Component SSR]
-    ./apps/renderer/src/app/page.tsx [Server Component]
-[00:05:31.081] Server  LOG     ✓ Compiled in 14ms
-[00:06:39.884] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:08:11.312] Server  LOG     ✓ Compiled in 25ms
-[00:08:42.279] Server  LOG     ✓ Compiled in 16ms
-[00:08:51.509] Server  LOG     ✓ Compiled in 15ms
-[00:09:00.549] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:09:07.455] Server  LOG     ✓ Compiled in 12ms
-[00:09:15.230] Server  LOG     ✓ Compiled in 11ms
-[00:09:43.285] Server  LOG     ✓ Compiled in 13ms
-[00:09:46.291] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:09:48.879] Server  LOG     ✓ Compiled in 12ms
-[00:09:57.197] Server  LOG     ✓ Compiled in 15ms
-[00:10:08.063] Server  LOG     ✓ Compiled in 9ms
-[00:11:57.505] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:12:22.944] Server  LOG     ✓ Compiled in 11ms
-[00:12:30.615] Server  LOG     ✓ Compiled in 11ms
-[00:13:22.801] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:15:11.665] Server  LOG     ✓ Compiled in 17ms
-[00:15:21.873] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:15:23.477] Server  LOG     ✓ Compiled in 29ms
-[00:15:30.836] Server  LOG     ✓ Compiled in 21ms
-[00:16:15.342] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:17:21.212] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:17:21.437] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:17:21.648] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:17:22.325] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:21:19.696] Server  LOG     ✓ Compiled in 32ms
-[00:21:20.657] Browser ERROR   ./apps/renderer/src/app/page.tsx:5:1
-Export LibraryPanel doesn't exist in target module
-  3 | import { useState, useRef, useEffect, useMemo } from "react";
-  4 | import { WorkspaceLayout } from "@/components/workspace-layout";
-> 5 | import { LibraryPanel } from "@/components/library/library-panel";
-    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  6 | import { AITutorPanel } from "@/components/ai-tutor/ai-tutor-panel";
-  7 |
-  8 | type CommandTab = "discover" | "workspace" | "history";
-
-The export LibraryPanel was not found in module [project]/apps/renderer/src/components/library/library-panel.tsx [app-client] (ecmascript).
-The module has no exports at all.
-All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
-
-Import traces:
-  Client Component Browser:
-    ./apps/renderer/src/app/page.tsx [Client Component Browser]
-    ./apps/renderer/src/app/page.tsx [Server Component]
-
-  Client Component SSR:
-    ./apps/renderer/src/app/page.tsx [Client Component SSR]
-    ./apps/renderer/src/app/page.tsx [Server Component]
-[00:21:20.657] Browser ERROR   ./apps/renderer/src/app/page.tsx:5:1
-Export LibraryPanel doesn't exist in target module
-  3 | import { useState, useRef, useEffect, useMemo } from "react";
-  4 | import { WorkspaceLayout } from "@/components/workspace-layout";
-> 5 | import { LibraryPanel } from "@/components/library/library-panel";
-    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  6 | import { AITutorPanel } from "@/components/ai-tutor/ai-tutor-panel";
-  7 |
-  8 | type CommandTab = "discover" | "workspace" | "history";
-
-The export LibraryPanel was not found in module [project]/apps/renderer/src/components/library/library-panel.tsx [app-ssr] (ecmascript).
-The module has no exports at all.
-All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
-
-Import traces:
-  Client Component Browser:
-    ./apps/renderer/src/app/page.tsx [Client Component Browser]
-    ./apps/renderer/src/app/page.tsx [Server Component]
-
-  Client Component SSR:
-    ./apps/renderer/src/app/page.tsx [Client Component SSR]
-    ./apps/renderer/src/app/page.tsx [Server Component]
-[00:22:15.658] Browser ERROR   uncaughtError: TypeError: Cannot read properties of undefined (reading 'title')
-[00:22:41.713] Server  WARN    ⚠ Fast Refresh had to perform a full reload due to a runtime error.
-[00:22:41.783] Server  LOG     ✓ Compiled in 14ms
-[00:22:41.827] Server  ERROR   ⨯ TypeError: Cannot read properties of undefined (reading 'title')
-[00:22:41.936] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:22:42.659] Browser ERROR   uncaughtError: TypeError: Cannot read properties of undefined (reading 'title')
-[00:22:54.331] Server  WARN    ⚠ Fast Refresh had to perform a full reload due to a runtime error.
-[00:22:54.368] Server  LOG     ✓ Compiled in 16ms
-[00:22:54.394] Server  ERROR   ⨯ ReferenceError: dashboardMode is not defined
-[00:22:54.481] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:22:54.657] Browser ERROR   uncaughtError: ReferenceError: dashboardMode is not defined
-[00:23:00.931] Server  WARN    ⚠ Fast Refresh had to perform a full reload due to a runtime error.
-[00:23:00.982] Server  ERROR   ⨯ ReferenceError: dashboardMode is not defined
-[00:23:00.986] Server  LOG     ✓ Compiled in 13ms
-[00:23:01.056] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:23:01.658] Browser ERROR   uncaughtError: ReferenceError: dashboardMode is not defined
-[00:23:10.411] Server  WARN    ⚠ Fast Refresh had to perform a full reload due to a runtime error.
-[00:23:10.470] Server  ERROR   ⨯ ReferenceError: toggleDashboardMode is not defined
-[00:23:10.475] Server  LOG     ✓ Compiled in 13ms
-[00:23:10.542] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:23:11.657] Browser ERROR   uncaughtError: ReferenceError: toggleDashboardMode is not defined
-[00:23:18.786] Server  WARN    ⚠ Fast Refresh had to perform a full reload due to a runtime error.
-[00:23:18.846] Server  ERROR   ⨯ ReferenceError: dashboardMode is not defined
-[00:23:18.851] Server  LOG     ✓ Compiled in 10ms
-[00:23:18.910] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:23:19.658] Browser ERROR   uncaughtError: ReferenceError: dashboardMode is not defined
-[00:25:09.690] Server  LOG     ✓ Compiled in 13ms
-[00:25:10.658] Browser ERROR   ./apps/renderer/src/app/page.tsx:809:13
-Parsing ecmascript source code failed
-  807 |               {renderCommandContent()}
-  808 |             </div>
-> 809 |           </section>
-      |             ^^^^^^^
-  810 |           )}
-  811 |
-  812 |           <div className="flex-1 w-full relative border-t border-white/30 rounded-b-3xl" ref={browserContainerRef}>
-
-Expected corresponding JSX closing tag for <WorkspaceLayout>
-
-Import traces:
-  Client Component Browser:
-    ./apps/renderer/src/app/page.tsx [Client Component Browser]
-    ./apps/renderer/src/app/page.tsx [Server Component]
-
-  Client Component SSR:
-    ./apps/renderer/src/app/page.tsx [Client Component SSR]
-    ./apps/renderer/src/app/page.tsx [Server Component]
-[00:25:18.031] Server  LOG     ✓ Compiled in 32ms
-[00:25:18.657] Browser ERROR   ./apps/renderer/src/app/page.tsx:828:13
-Parsing ecmascript source code failed
-  826 |               {renderCommandContent()}
-  827 |             </div>
-> 828 |           </section>
-      |             ^^^^^^^
-  829 |           )}
-  830 |
-  831 |           <div className="flex-1 w-full relative border-t border-white/30 rounded-b-3xl" ref={browserContainerRef}>
-
-Expected corresponding JSX closing tag for <WorkspaceLayout>
-[00:25:31.741] Server  LOG     ✓ Compiled in 9ms
-[00:25:32.659] Browser ERROR   ./apps/renderer/src/app/page.tsx:823:13
-Parsing ecmascript source code failed
-  821 |               {renderCommandContent()}
-  822 |             </div>
-> 823 |           </section>
-      |             ^^^^^^^
-  824 |           )}
-  825 |
-  826 |           <div className="flex-1 w-full relative border-t border-white/30 rounded-b-3xl" ref={browserContainerRef}>
-
-Expected corresponding JSX closing tag for <WorkspaceLayout>
-[00:26:00.402] Server  LOG     ✓ Compiled in 11ms
-[00:26:00.658] Browser ERROR   ./apps/renderer/src/app/page.tsx:823:13
-Parsing ecmascript source code failed
-  821 |               {renderCommandContent()}
-  822 |             </div>
-> 823 |           </section>
-      |             ^^^^^^^
-  824 |           )}
-  825 |
-  826 |           <div className="flex-1 w-full relative border-t border-white/30 rounded-b-3xl" ref={browserContainerRef}>
-
-Expected corresponding JSX closing tag for <WorkspaceLayout>
-[00:26:09.529] Server  LOG     ✓ Compiled in 16ms
-[00:26:09.658] Browser ERROR   ./apps/renderer/src/app/page.tsx:823:13
-Parsing ecmascript source code failed
-  821 |               {renderCommandContent()}
-  822 |             </div>
-> 823 |           </section>
-      |             ^^^^^^^
-  824 |           )}
-  825 |
-  826 |           <div className="flex-1 w-full relative border-t border-white/30 rounded-b-3xl" ref={browserContainerRef}>
-
-Expected corresponding JSX closing tag for <WorkspaceLayout>
-[00:27:24.893] Server  WARN    ⚠ Fast Refresh had to perform a full reload due to a runtime error.
-[00:27:25.077] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:27:55.505] Server  LOG     ✓ Compiled in 11ms
-[00:28:03.685] Server  LOG     ✓ Compiled in 10ms
-[00:28:20.687] Server  LOG     ✓ Compiled in 11ms
-[00:28:44.654] Server  LOG     ✓ Compiled in 11ms
-[00:49:37.655] Server  LOG     ✓ Compiled in 25ms
-[00:53:38.209] Server  LOG     ✓ Compiled in 18ms
+[00:00:00.658] Server  LOG     ✓ Ready in 467ms
+[00:00:02.601] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:17.012] Server  LOG     ✓ Compiled in 196ms
+[00:00:23.874] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:37.290] Server  LOG     ✓ Compiled in 31ms
+[00:01:14.493] Server  LOG     ✓ Compiled in 29ms
+[00:01:54.043] Server  LOG     ✓ Compiled in 18ms
+[00:02:19.666] Server  LOG     ✓ Compiled in 12ms
+[00:02:38.100] Server  LOG     ✓ Compiled in 18ms
+[00:03:02.283] Server  LOG     ✓ Compiled in 30ms
+[00:03:16.245] Server  LOG     ✓ Compiled in 27ms
+[00:04:35.477] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:07:32.114] Server  LOG     ✓ Compiled in 25ms
+[00:07:34.098] Server  LOG     ✓ Compiled in 21ms
+[00:10:07.131] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:10:13.650] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:10:55.445] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:10:59.088] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:11:02.470] Server  LOG     ✓ Compiled in 20ms
+[00:12:22.095] Server  LOG     ✓ Compiled in 15ms
+[00:13:20.473] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:13:36.155] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:14:27.274] Server  LOG     ✓ Compiled in 28ms
+[00:15:13.371] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:15:14.218] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:16:36.422] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:16:37.600] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:17:13.113] Server  LOG     ✓ Compiled in 15ms
+[00:17:52.974] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:17:54.038] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:18:06.817] Server  LOG     ✓ Compiled in 17ms
+[00:18:12.371] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:18:20.138] Server  LOG     ✓ Compiled in 15ms
+[00:18:23.142] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:19:09.483] Server  LOG     ✓ Compiled in 16ms
+[00:19:21.008] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:19:22.904] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold

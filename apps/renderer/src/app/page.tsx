@@ -289,8 +289,8 @@ export default function Home() {
     status: "Idle",
   });
   const sessionCounterRef = useRef(0);
-  const [libraryCollapsed, setLibraryCollapsed] = useState(false);
-  const [tutorCollapsed, setTutorCollapsed] = useState(false);
+  const [libraryCollapsed, setLibraryCollapsed] = useState(true);
+  const [tutorCollapsed, setTutorCollapsed] = useState(true);
   const [toolInFlight, setToolInFlight] = useState<string | null>(null);
   const [toolResult, setToolResult] = useState<{ title: string; detail: string } | null>(null);
 
@@ -334,7 +334,7 @@ export default function Home() {
     const updateBounds = () => {
       if (!browserContainerRef.current) return;
       const rect = browserContainerRef.current.getBoundingClientRect();
-      const inset = 18; // leave room so the BrowserView doesn't cover rounded corners
+      const inset = 0; // No padding - completely full-screen
       const nextWidth = Math.max(0, rect.width - inset * 2);
       const nextHeight = Math.max(0, rect.height - inset * 2);
 
@@ -449,11 +449,11 @@ export default function Home() {
           prev.map((entry) =>
             entry.id === activeSessionId
               ? {
-                  ...entry,
-                  title: data.title || entry.title,
-                  status: "Synced",
-                  time: "Just now",
-                }
+                ...entry,
+                title: data.title || entry.title,
+                status: "Synced",
+                time: "Just now",
+              }
               : entry
           )
         );
@@ -520,7 +520,7 @@ export default function Home() {
     >
       <div className="h-full flex flex-col bg-transparent relative z-0">
         {/* Header / Command Bar */}
-        <div className="border-b border-white/30 px-6 py-5 bg-white/70 backdrop-blur-2xl rounded-t-3xl shadow-sm">
+        <div className="border-b border-white/30 px-6 py-5 glass-ultra backdrop-blur-2xl rounded-t-3xl transition-smooth">
           <div className="flex items-center justify-between mb-4 flex-wrap gap-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.4em] text-foreground/40">
@@ -530,35 +530,34 @@ export default function Home() {
             </div>
             <div className="flex items-center gap-3 flex-wrap">
               <button
-                className="w-9 h-9 rounded-2xl bg-white border border-white/80 flex items-center justify-center text-foreground/70 hover:text-foreground transition"
+                className="w-9 h-9 rounded-2xl glass-ultra border border-white/80 flex items-center justify-center text-foreground/70 hover:text-foreground transition-spring liquid-hover"
                 onClick={() => handleBrowserAction("back")}
                 title="Back"
               >
                 <Icon name="arrow-left" className="w-4 h-4" />
               </button>
               <button
-                className="w-9 h-9 rounded-2xl bg-white border border-white/80 flex items-center justify-center text-foreground/70 hover:text-foreground transition"
+                className="w-9 h-9 rounded-2xl glass-ultra border border-white/80 flex items-center justify-center text-foreground/70 hover:text-foreground transition-spring liquid-hover"
                 onClick={() => handleBrowserAction("forward")}
                 title="Forward"
               >
                 <Icon name="arrow-right" className="w-4 h-4" />
               </button>
               <button
-                className="w-9 h-9 rounded-2xl bg-white border border-white/80 flex items-center justify-center text-foreground/70 hover:text-foreground transition"
+                className="w-9 h-9 rounded-2xl glass-ultra border border-white/80 flex items-center justify-center text-foreground/70 hover:text-foreground transition-spring liquid-hover"
                 onClick={() => handleBrowserAction("refresh")}
                 title="Refresh"
               >
                 <Icon name="refresh" className="w-4 h-4" />
               </button>
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/80 border border-white/60">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full glass-ultra border border-white/60 transition-smooth">
                 <span
-                  className={`w-2 h-2 rounded-full ${
-                    currentSession.status === "Synced"
-                      ? "bg-emerald-500"
-                      : currentSession.status === "Live"
+                  className={`w-2 h-2 rounded-full ${currentSession.status === "Synced"
+                    ? "bg-emerald-500"
+                    : currentSession.status === "Live"
                       ? "bg-blue-500"
                       : "bg-amber-400"
-                  }`}
+                    }`}
                 />
                 <span className="text-xs font-semibold text-foreground/60">{currentSession.status}</span>
               </div>
@@ -566,22 +565,20 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={() => setLibraryCollapsed((prev) => !prev)}
-                  className={`px-4 py-2 rounded-2xl text-xs font-semibold border transition ${
-                    libraryCollapsed
-                      ? "border-foreground/30 text-foreground/70 bg-white/70"
-                      : "border-white/70 text-foreground/60 bg-white/80 hover:text-foreground"
-                  }`}
+                  className={`px-4 py-2 rounded-2xl text-xs font-semibold border transition-spring ${libraryCollapsed
+                    ? "border-foreground/30 text-foreground/70 glass-ultra liquid-hover"
+                    : "border-white/70 text-foreground/60 glass-ultra hover:text-foreground liquid-hover"
+                    }`}
                 >
                   {libraryCollapsed ? "Show Library" : "Hide Library"}
                 </button>
                 <button
                   type="button"
                   onClick={() => setTutorCollapsed((prev) => !prev)}
-                  className={`px-4 py-2 rounded-2xl text-xs font-semibold border transition ${
-                    tutorCollapsed
-                      ? "border-foreground/30 text-foreground/70 bg-white/70"
-                      : "border-white/70 text-foreground/60 bg-white/80 hover:text-foreground"
-                  }`}
+                  className={`px-4 py-2 rounded-2xl text-xs font-semibold border transition-spring ${tutorCollapsed
+                    ? "border-foreground/30 text-foreground/70 glass-ultra liquid-hover"
+                    : "border-white/70 text-foreground/60 glass-ultra hover:text-foreground liquid-hover"
+                    }`}
                 >
                   {tutorCollapsed ? "Show AI Tutor" : "Hide AI Tutor"}
                 </button>
@@ -589,7 +586,7 @@ export default function Home() {
               <button
                 type="button"
                 onClick={handleFocusToggle}
-                className="px-4 py-2 rounded-2xl text-xs font-semibold border border-white/70 bg-white/80 text-foreground/70 hover:text-foreground transition"
+                className="px-4 py-2 rounded-2xl text-xs font-semibold border border-white/70 glass-ultra text-foreground/70 hover:text-foreground transition-spring liquid-hover"
               >
                 {libraryCollapsed && tutorCollapsed ? "Show workspace" : "Focus on page"}
               </button>
@@ -597,18 +594,18 @@ export default function Home() {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="flex-1 flex items-center bg-white/40 rounded-2xl border border-white/60 px-4 py-2 shadow-inner backdrop-blur-lg focus-within:ring-2 focus-within:ring-blue-500/30 transition">
+            <div className="flex-1 flex items-center glass-ultra rounded-2xl border-2 border-white/80 px-4 py-3 shadow-md backdrop-blur-lg focus-within:ring-2 focus-within:ring-blue-500/50 focus-within:border-blue-500/40 transition-smooth">
               <Icon name="search" className="w-4 h-4 text-foreground/50 mr-3" />
               <input
                 value={urlValue}
                 onChange={(event) => setUrlValue(event.target.value)}
                 onKeyDown={handleKeyDown}
-                className="bg-transparent border-none focus:outline-none w-full text-foreground placeholder:text-foreground/40 text-sm"
+                className="bg-transparent border-none focus:outline-none w-full text-foreground placeholder:text-foreground/50 text-sm font-medium"
                 placeholder="Drop a link or search term..."
               />
             </div>
             <button
-              className="px-5 py-2 rounded-2xl text-sm font-semibold text-white bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500 shadow-lg hover:-translate-y-0.5 hover:shadow-xl transition"
+              className="px-5 py-2 rounded-2xl text-sm font-semibold text-white bg-blue-500 shadow-lg hover:-translate-y-1 hover:shadow-xl transition-spring glow-hover active:scale-95"
               onClick={() => navigate()}
             >
               Go
@@ -617,7 +614,7 @@ export default function Home() {
         </div>
 
         <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex-1 w-full relative border-t border-white/30 rounded-b-3xl" ref={browserContainerRef}>
+          <div className="flex-1 w-full relative border-t border-white/30" ref={browserContainerRef}>
             <div className="absolute inset-0 flex items-center justify-center text-muted-foreground pointer-events-none select-none">
               {/* BrowserView overlays this region */}
               <div className="text-center pointer-events-none select-none">
