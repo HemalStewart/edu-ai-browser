@@ -334,15 +334,12 @@ export default function Home() {
     const updateBounds = () => {
       if (!browserContainerRef.current) return;
       const rect = browserContainerRef.current.getBoundingClientRect();
-      const inset = 0; // No padding - completely full-screen
-      const nextWidth = Math.max(0, rect.width - inset * 2);
-      const nextHeight = Math.max(0, rect.height - inset * 2);
 
       window.eduAPI.resizeBrowserView({
-        x: Math.round(rect.x + inset),
-        y: Math.round(rect.y + inset),
-        width: Math.round(nextWidth),
-        height: Math.round(nextHeight),
+        x: Math.round(rect.x),
+        y: Math.round(rect.y),
+        width: Math.round(rect.width),
+        height: Math.round(rect.height),
       });
     };
 
@@ -361,7 +358,7 @@ export default function Home() {
         window.eduAPI.resizeBrowserView({ x: 0, y: 0, width: 0, height: 0 });
       }
     };
-  }, []);
+  }, [libraryCollapsed, tutorCollapsed]);
 
 
   const navigate = (targetOverride?: string) => {
@@ -520,7 +517,7 @@ export default function Home() {
     >
       <div className="h-full flex flex-col bg-transparent relative z-0">
         {/* Header / Command Bar */}
-        <div className="border-b border-white/30 px-6 py-5 glass-ultra backdrop-blur-2xl rounded-t-3xl transition-smooth">
+        <div className="px-6 py-5 glass-ultra backdrop-blur-2xl transition-smooth">
           <div className="flex items-center justify-between mb-4 flex-wrap gap-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.4em] text-foreground/40">
@@ -614,7 +611,7 @@ export default function Home() {
         </div>
 
         <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex-1 w-full relative border-t border-white/30" ref={browserContainerRef}>
+          <div className="flex-1 w-full relative" ref={browserContainerRef}>
             <div className="absolute inset-0 flex items-center justify-center text-muted-foreground pointer-events-none select-none">
               {/* BrowserView overlays this region */}
               <div className="text-center pointer-events-none select-none">

@@ -16,7 +16,7 @@ export function WorkspaceLayout({
     hideRightPanel = false,
 }: WorkspaceLayoutProps) {
     return (
-        <div className="flex h-screen w-screen overflow-hidden p-3 gap-3">
+        <div className="flex h-screen w-screen overflow-hidden">
             {/* Left Panel: Library */}
             <aside
                 className={`flex-shrink-0 overflow-hidden flex flex-col transition-spring ${hideLeftPanel
@@ -27,8 +27,8 @@ export function WorkspaceLayout({
                 {!hideLeftPanel && leftPanel}
             </aside>
 
-            {/* Center Panel: Reader/Browser - Opaque center for readability, but rounded */}
-            <main className="flex-1 h-full min-w-0 flex flex-col relative overflow-hidden rounded-3xl glass-ultra shadow-inner ring-1 ring-black/5 transition-smooth">
+            {/* Center Panel: Reader/Browser */}
+            <main className="flex-1 h-full min-w-0 flex flex-col relative overflow-hidden transition-smooth">
                 {children}
             </main>
 
