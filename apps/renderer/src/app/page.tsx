@@ -52,7 +52,7 @@ interface LearningPath {
   tasks: Array<{ label: string; detail: string }>;
 }
 
-type IconName = "search" | "arrow-left" | "arrow-right" | "refresh" | "plus" | "x";
+type IconName = "search" | "arrow-left" | "arrow-right" | "refresh" | "plus" | "x" | "google" | "bing" | "duckduckgo" | "wikipedia" | "perplexity" | "book" | "sparkles";
 
 type ReaderExplainState =
   | { status: "idle"; text?: undefined; response?: undefined }
@@ -150,6 +150,56 @@ const Icon = ({ name, className }: { name: IconName; className?: string }) => {
         >
           <path d="M18 6 6 18" />
           <path d="M6 6 18 18" />
+        </svg>
+      );
+    case "google":
+      return (
+        <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+        </svg>
+      );
+    case "bing":
+      return (
+        <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+          <path d="M5 3v18l5-3 7 4V8.5L11 5 5 3z" fill="#008373" />
+          <path d="M10 13l-5 3V3l5 2v8z" fill="#00B7A8" />
+          <path d="M17 22l-7-4 2-1.5 5 2.5V8.5l-6-3.5v8l-1 .5V5l6 3v14z" fill="#FFB900" />
+        </svg>
+      );
+    case "duckduckgo":
+      return (
+        <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+          <path d="M12 0C8.25 0 5.197 2.888 5.197 6.475c0 .35.034.696.09 1.036-.255.137-1.081.604-1.081 1.481 0 .849.639 1.366 1.063 1.59-.107.356-.165.73-.165 1.118 0 2.27 1.85 4.11 4.129 4.11.603 0 1.174-.128 1.69-.36.467.622 1.215 1.026 2.077 1.026 1.417 0 2.567-1.147 2.567-2.56 0-.218-.028-.43-.08-.63.888-.58 1.48-1.591 1.48-2.744 0-1.8-1.462-3.258-3.267-3.258-.924 0-1.76.383-2.357.997a4.125 4.125 0 0 0-2.094-.559c-2.28 0-4.129 1.84-4.129 4.11 0 .85.26 1.64.703 2.296-.388.276-.77.694-.77 1.403 0 1.036.84 1.875 1.877 1.875.355 0 .687-.099.971-.27.567 1.962 2.398 3.4 4.586 3.4 2.632 0 4.767-2.13 4.767-4.756C18.803 2.888 15.75 0 12 0zm0 1.8c2.992 0 5.422 2.425 5.422 5.41 0 .49-.067.964-.192 1.414-.537-.267-1.142-.418-1.783-.418-2.28 0-4.129 1.84-4.129 4.11 0 .388.058.762.165 1.118-.424.224-1.063.741-1.063 1.59 0 .877.826 1.344 1.081 1.481-.056.34-.09.686-.09 1.036 0 3.587 3.053 6.475 6.803 6.475-2.188 0-4.019-1.438-4.586-3.4-.284.171-.616.27-.971.27-1.037 0-1.877-.839-1.877-1.875 0-.709.382-1.127.77-1.403a4.088 4.088 0 0 1-.703-2.296c0-2.27 1.849-4.11 4.129-4.11.734 0 1.428.184 2.034.509.597-.614 1.433-.997 2.357-.997 1.805 0 3.267 1.458 3.267 3.258 0 1.153-.592 2.165-1.48 2.744.052.2.08.412.08.63 0 1.413-1.15 2.56-2.567 2.56-.862 0-1.61-.404-2.077-1.026a4.096 4.096 0 0 1-1.69.36c-2.279 0-4.129-1.84-4.129-4.11 0-.388.058-.762.165-1.118-.424-.224-1.063-.741-1.063-1.59 0-.877.826-1.344 1.081-1.481-.056-.34-.09-.686-.09-1.036C6.578 4.225 9.008 1.8 12 1.8z" />
+        </svg>
+      );
+    case "wikipedia":
+      return (
+        <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+          <path d="M12.09 13.119c-.936 1.932-2.217 4.548-2.853 5.728-.616 1.074-1.127.931-1.532.029-1.406-3.321-4.293-9.144-5.651-12.409-.251-.601-.441-.987-.619-1.139-.181-.15-.554-.24-1.122-.271C.103 5.033 0 4.982 0 4.898v-.455l.052-.045c.924-.005 5.401 0 5.401 0l.051.045v.434c0 .119-.075.176-.225.176l-.564.031c-.485.029-.727.164-.727.436 0 .135.053.33.166.601 1.082 2.646 4.818 10.521 4.818 10.521l.136.046 2.411-4.81-.482-.93L9.075 6.951c-.568-1.097-1.089-1.766-1.585-2.008-.494-.241-1.043-.361-1.634-.361-.371 0-.556-.08-.556-.247v-.515c0-.02.017-.038.051-.052l.15-.018c.763-.005 2.691 0 2.691 0l.051.052v.477c0 .143-.074.217-.223.217-.359.016-.538.065-.538.147 0 .299.33.964.994 1.994l1.864 3.585 1.496-2.968.213-.465c.164-.356.246-.645.246-.869 0-.3-.115-.502-.349-.606-.234-.105-.613-.16-1.139-.166-.154 0-.231-.08-.231-.237v-.436c0-.022.017-.038.052-.053l.15-.017c.645-.005 2.471 0 2.471 0l.051.052v.477c0 .143-.075.217-.225.217-.329.016-.542.065-.646.147-.104.082-.294.383-.572.903l-2.563 4.842 2.043 4.005c.065.135.149.271.255.406l3.104-5.881c.214-.426.321-.709.321-.851 0-.244-.104-.411-.314-.501-.209-.09-.554-.135-1.031-.135-.209 0-.314-.08-.314-.237v-.436c0-.022.016-.038.051-.053l.15-.017c.645-.005 2.471 0 2.471 0l.051.052v.477c0 .143-.074.217-.225.217-.329.016-.542.065-.646.147-.104.082-.294.383-.572.903l-3.953 7.531-.359.658c-.18.345-.405.647-.675.903-.271.257-.536.385-.795.385-.135 0-.27-.034-.405-.103a.988.988 0 0 1-.344-.283l-2.411-4.758-2.572 4.759c-.209.391-.495.586-.857.586-.135 0-.27-.034-.405-.103a.988.988 0 0 1-.344-.283l-5.651-10.521-.225-.436c-.119-.225-.27-.338-.451-.338-.12 0-.195.061-.225.182l-.075.301c-.045.165-.104.248-.179.248-.12 0-.18-.074-.18-.221v-.464c0-.016.016-.031.045-.045.09-.029.18-.044.27-.044h5.114c.12 0 .195.074.225.221l.075.301c.045.165.104.248.179.248.12 0 .18-.074.18-.221v-.464c0-.016-.015-.031-.045-.045-.09-.029-.18-.044-.27-.044h-5.114c-.12 0-.195-.074-.225-.221l-.075-.301c-.045-.165-.104-.248-.179-.248-.12 0-.18.074-.18.221v.464c0 .016.015.031.045.045.09.029.18.044.27.044h5.114c.12 0 .195.074.225.221l.075.301c.045.165.104.248.179.248.12 0 .18-.074.18-.221v-.464c0-.016-.015-.031-.045-.045-.09-.029-.18-.044-.27-.044H6.168l2.411 4.542 2.572-4.542h5.114c.12 0 .195.074.225.221l.075.301c.045.165.104.248.179.248.12 0 .18-.074.18-.221v-.464c0-.016-.015-.031-.045-.045-.09-.029-.18-.044-.27-.044h-5.114c-.12 0-.195-.074-.225-.221l-.075-.301c-.045-.165-.104-.248-.179-.248-.12 0-.18.074-.18.221v.464c0 .016.015.031.045.045.09.029.18.044.27.044h5.114l3.953 7.531z" />
+        </svg>
+      );
+    case "perplexity":
+      return (
+        <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+          <path d="M16.5 3.5h-9c-.83 0-1.5.67-1.5 1.5v14c0 .83.67 1.5 1.5 1.5h9c.83 0 1.5-.67 1.5-1.5V5c0-.83-.67-1.5-1.5-1.5zm-7.5 3h6v2h-6v-2zm0 3h6v2h-6v-2zm0 3h4v2H9v-2z" />
+          <circle cx="12" cy="8" r="1.5" />
+          <circle cx="12" cy="12" r="1.5" />
+        </svg>
+      );
+    case "book":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className={className}>
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+        </svg>
+      );
+    case "sparkles":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className={className}>
+          <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
         </svg>
       );
     default:
@@ -310,11 +360,11 @@ const COMPLIANCE_FEATURES: ComplianceFeature[] = [
 ];
 
 const SEARCH_ENGINES = [
-  { name: "Google", url: "https://google.com", icon: "search", color: "bg-blue-500/10 text-blue-600 border-blue-200/50" },
-  { name: "Bing", url: "https://bing.com", icon: "search", color: "bg-indigo-500/10 text-indigo-600 border-indigo-200/50" },
-  { name: "DuckDuckGo", url: "https://duckduckgo.com", icon: "search", color: "bg-orange-500/10 text-orange-600 border-orange-200/50" },
-  { name: "Wikipedia", url: "https://wikipedia.org", icon: "book", color: "bg-gray-500/10 text-gray-600 border-gray-200/50" },
-  { name: "Perplexity", url: "https://perplexity.ai", icon: "sparkles", color: "bg-teal-500/10 text-teal-600 border-teal-200/50" },
+  { name: "Google", url: "https://google.com", icon: "/icons/google.svg", color: "bg-blue-500/10 text-blue-600 border-blue-200/50" },
+  { name: "Bing", url: "https://bing.com", icon: "/icons/bing.svg", color: "bg-indigo-500/10 text-indigo-600 border-indigo-200/50" },
+  { name: "DuckDuckGo", url: "https://duckduckgo.com", icon: "/icons/duckduckgo.svg", color: "bg-orange-500/10 text-orange-600 border-orange-200/50" },
+  { name: "Wikipedia", url: "https://wikipedia.org", icon: "/icons/wikipedia.svg", color: "bg-gray-500/10 text-gray-600 border-gray-200/50" },
+  { name: "Perplexity", url: "https://perplexity.ai", icon: "/icons/perplexity.svg", color: "bg-teal-500/10 text-teal-600 border-teal-200/50" },
 ];
 
 export default function Home() {
@@ -943,7 +993,11 @@ export default function Home() {
                       className={`flex flex-col items-center justify-center gap-3 p-6 rounded-3xl border border-white/50 glass-panel hover:scale-105 hover:bg-white/20 transition-spring group ${engine.color}`}
                     >
                       <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl bg-white/50 shadow-sm group-hover:shadow-md transition-all`}>
-                        <Icon name={engine.icon as any} className="w-6 h-6" />
+                        {engine.icon.startsWith("/") ? (
+                          <img src={engine.icon} alt={engine.name} className="w-6 h-6 object-contain" />
+                        ) : (
+                          <Icon name={engine.icon as any} className="w-6 h-6" />
+                        )}
                       </div>
                       <span className="font-semibold text-foreground/80">{engine.name}</span>
                     </button>
