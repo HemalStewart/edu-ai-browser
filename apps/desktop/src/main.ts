@@ -16,7 +16,9 @@ if (!process.env.GEMINI_API_KEY) {
 const isDev = process.env.NODE_ENV === "development";
 
 let mainWindow: BrowserWindow | null = null;
-let browserView: BrowserView | null = null;
+// Map<TabID, BrowserView>
+const tabs = new Map<string, BrowserView>();
+let activeTabId: string | null = null;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -35,63 +37,128 @@ function createWindow() {
     },
   });
 
-  // Initialize BrowserView
-  browserView = new BrowserView({
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-      sandbox: true,
-    },
-  });
-  mainWindow.setBrowserView(browserView);
-
-  // Default bounds (hidden initially)
-  browserView.setBounds({ x: 0, y: 0, width: 0, height: 0 });
-  browserView.webContents.loadURL("about:blank");
-
   ipcMain.handle("ping", async () => "pong");
 
-  ipcMain.on("browser-view:load", (_, url) => {
-    if (browserView) {
-      browserView.webContents.loadURL(url).catch((e) => {
+  // --- Tab Management ---
+
+  ipcMain.handle("tab:create", (_, tabId: string) => {
+    console.log(`[Main] tab:create ${tabId}`);
+    if (!mainWindow) return;
+    const view = new BrowserView({
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true,
+        sandbox: true,
+      },
+    });
+
+    // Default to a blank page or specific new tab page
+    view.webContents.loadURL("about:blank");
+    tabs.set(tabId, view);
+
+    // If it's the first tab, make it active automatically, or wait for explicit select
+    if (!activeTabId) {
+      activeTabId = tabId;
+      mainWindow.setBrowserView(view);
+      // Initialize bounds to 0 until resized
+      view.setBounds({ x: 0, y: 0, width: 0, height: 0 });
+    }
+    return true;
+  });
+
+  ipcMain.handle("tab:remove", (_, tabId: string) => {
+    const view = tabs.get(tabId);
+    if (!view) return;
+
+    // If closing the active tab, we detach it first
+    if (mainWindow && activeTabId === tabId) {
+      mainWindow.setBrowserView(null);
+    }
+
+    // Explicitly destroy usage if needed, but simple dereference usually suffices in JS.
+    // However, Electron recommends explicit destruction for BrowserViews sometimes if they are detached.
+    // view.webContents.destroy(); // Optional, but good for cleanup
+
+    tabs.delete(tabId);
+
+    if (activeTabId === tabId) {
+      activeTabId = null;
+    }
+  });
+
+  ipcMain.handle("tab:select", (_, tabId: string) => {
+    console.log(`[Main] tab:select ${tabId}`);
+    if (!mainWindow) return;
+    const view = tabs.get(tabId);
+    if (view) {
+      activeTabId = tabId;
+      mainWindow.setBrowserView(view);
+      // Note: The renderer normally sends a resize event immediately after selection to ensure bounds are correct.
+    }
+  });
+
+  // --- Browser View Actions (Targeted by Tab ID) ---
+
+  const getTab = (id?: string) => {
+    // If no ID provided, default to active (legacy support or convenience)
+    if (!id && activeTabId) return tabs.get(activeTabId);
+    if (id) return tabs.get(id);
+    return null;
+  };
+
+  ipcMain.on("browser-view:load", (_, { tabId, url }: { tabId: string; url: string }) => {
+    console.log(`[Main] browser-view:load ${tabId} -> ${url}`);
+    const view = getTab(tabId);
+    if (view) {
+      view.webContents.loadURL(url).catch((e) => {
         console.error("Failed to load URL:", url, e);
       });
+    } else {
+      console.warn(`[Main] load failed - view not found for ${tabId}`);
     }
   });
 
-  ipcMain.on("browser-view:resize", (_, bounds) => {
-    if (browserView) {
-      // Adjust bounds logic if needed, but direct mapping is usually fine
-      // if the renderer provides window-relative coordinates
-      browserView.setBounds(bounds);
+  ipcMain.on("browser-view:resize", (_, { tabId, bounds }: { tabId: string; bounds: Electron.Rectangle }) => {
+    // Only resize if it's the active tab, or resize background tabs too?
+    // Usually we only care about the active one mapping to the placeholder.
+    // But if we resize background tabs, they might be ready when switched.
+    // However, setBrowserView(view) replaces the view.
+    const view = getTab(tabId);
+    if (view) {
+      // console.log(`[Main] browser-view:resize ${tabId}`, bounds); 
+      view.setBounds(bounds);
     }
   });
 
-  ipcMain.on("browser-view:back", () => {
-    if (browserView && browserView.webContents.canGoBack()) {
-      browserView.webContents.goBack();
+  ipcMain.on("browser-view:back", (_, tabId: string) => {
+    const view = getTab(tabId);
+    if (view && view.webContents.canGoBack()) {
+      view.webContents.goBack();
     }
   });
 
-  ipcMain.on("browser-view:forward", () => {
-    if (browserView && browserView.webContents.canGoForward()) {
-      browserView.webContents.goForward();
+  ipcMain.on("browser-view:forward", (_, tabId: string) => {
+    const view = getTab(tabId);
+    if (view && view.webContents.canGoForward()) {
+      view.webContents.goForward();
     }
   });
 
-  ipcMain.on("browser-view:refresh", () => {
-    if (browserView) {
-      browserView.webContents.reload();
+  ipcMain.on("browser-view:refresh", (_, tabId: string) => {
+    const view = getTab(tabId);
+    if (view) {
+      view.webContents.reload();
     }
   });
 
   // Extraction Handler
-  ipcMain.handle("browser-view:extract-text", async () => {
-    if (!browserView) return { title: "", content: "" };
+  ipcMain.handle("browser-view:extract-text", async (_, tabId?: string) => {
+    const view = getTab(tabId);
+    if (!view) return { title: "", content: "" };
 
     try {
       // Execute script in the BrowserView to get title and simple text
-      const result = await browserView.webContents.executeJavaScript(`
+      const result = await view.webContents.executeJavaScript(`
   (function () {
     const title = document.title;
     const selection = window.getSelection().toString();
