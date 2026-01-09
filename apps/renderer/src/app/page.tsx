@@ -309,9 +309,17 @@ const COMPLIANCE_FEATURES: ComplianceFeature[] = [
   },
 ];
 
+const SEARCH_ENGINES = [
+  { name: "Google", url: "https://google.com", icon: "search", color: "bg-blue-500/10 text-blue-600 border-blue-200/50" },
+  { name: "Bing", url: "https://bing.com", icon: "search", color: "bg-indigo-500/10 text-indigo-600 border-indigo-200/50" },
+  { name: "DuckDuckGo", url: "https://duckduckgo.com", icon: "search", color: "bg-orange-500/10 text-orange-600 border-orange-200/50" },
+  { name: "Wikipedia", url: "https://wikipedia.org", icon: "book", color: "bg-gray-500/10 text-gray-600 border-gray-200/50" },
+  { name: "Perplexity", url: "https://perplexity.ai", icon: "sparkles", color: "bg-teal-500/10 text-teal-600 border-teal-200/50" },
+];
+
 export default function Home() {
   const browserContainerRef = useRef<HTMLDivElement>(null);
-  const [urlValue, setUrlValue] = useState("https://react.dev/learn");
+  const [urlValue, setUrlValue] = useState("");
   const [focusMode, setFocusMode] = useState(true);
   const [notesEnabled, setNotesEnabled] = useState(false);
   const [aiSyncEnabled, setAiSyncEnabled] = useState(true);
@@ -338,15 +346,16 @@ export default function Home() {
   const [tabs, setTabs] = useState<SessionState[]>([
     {
       id: "session-seed",
-      title: "Ready to explore",
-      url: "https://react.dev/learn",
-      peek: "Use the hyper address bar to jump into any doc or save a link from the cards below.",
+      title: "New Tab",
+      url: "about:blank",
+      peek: "Ready to explore",
       status: "Idle",
     },
   ]);
   const [activeTabId, setActiveTabId] = useState<string>("session-seed");
 
   const activeTab = tabs.find((t) => t.id === activeTabId) || tabs[0];
+  const isNewTab = activeTab.url === "about:blank" || activeTab.url === "";
 
   // Initialize first tab on mount
   useEffect(() => {
@@ -476,8 +485,7 @@ export default function Home() {
     if (typeof window !== "undefined" && window.eduAPI) {
       window.eduAPI.createTab("session-seed").then(() => {
         window.eduAPI.selectTab("session-seed");
-        window.eduAPI.loadBrowserView("session-seed", "https://react.dev/learn");
-        // Force a state update to trigger the resize effect
+        // window.eduAPI.loadBrowserView("session-seed", "https://react.dev/learn");
         setIsReady(true);
       });
     }
@@ -499,10 +507,10 @@ export default function Home() {
       });
     };
 
-    if (readerMode) {
+    if (readerMode || isNewTab) {
       if (activeTabId) window.eduAPI.resizeBrowserView(activeTabId, { x: 0, y: 0, width: 0, height: 0 });
       return () => {
-        if (activeTabId) window.eduAPI.resizeBrowserView(activeTabId, { x: 0, y: 0, width: 0, height: 0 });
+        // if (activeTabId) window.eduAPI.resizeBrowserView(activeTabId, { x: 0, y: 0, width: 0, height: 0 });
       };
     }
 
@@ -525,7 +533,7 @@ export default function Home() {
         window.eduAPI.resizeBrowserView(activeTabId, { x: 0, y: 0, width: 0, height: 0 });
       }
     };
-  }, [libraryCollapsed, tutorCollapsed, readerMode, activeTabId, isReady]);
+  }, [libraryCollapsed, tutorCollapsed, readerMode, activeTabId, isReady, isNewTab]);
 
   // Add isReady to dependency of resize effect
 
@@ -929,7 +937,31 @@ export default function Home() {
 
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className="flex-1 w-full relative" ref={browserContainerRef}>
-            {!readerMode && (
+            {!readerMode && isNewTab && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center p-8 pointer-events-auto z-10 animate-in fade-in zoom-in-95 duration-500">
+                <div className="text-center mb-10">
+                  <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-br from-foreground to-foreground/50 mb-3">Where to?</h1>
+                  <p className="text-foreground/40 text-lg">Search or enter a URL to begin</p>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 w-full max-w-2xl">
+                  {SEARCH_ENGINES.map((engine) => (
+                    <button
+                      key={engine.name}
+                      onClick={() => navigate(engine.url)}
+                      className={`flex flex-col items-center justify-center gap-3 p-6 rounded-3xl border border-white/50 glass-panel hover:scale-105 hover:bg-white/20 transition-spring group ${engine.color}`}
+                    >
+                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl bg-white/50 shadow-sm group-hover:shadow-md transition-all`}>
+                        <Icon name={engine.icon as any} className="w-6 h-6" />
+                      </div>
+                      <span className="font-semibold text-foreground/80">{engine.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {!readerMode && !isNewTab && (
               <div className="absolute inset-0 flex items-center justify-center text-muted-foreground pointer-events-none select-none">
                 {/* BrowserView overlays this region */}
                 <div className="text-center pointer-events-none select-none">
