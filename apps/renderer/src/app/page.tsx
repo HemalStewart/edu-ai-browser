@@ -357,16 +357,7 @@ export default function Home() {
   const activeTab = tabs.find((t) => t.id === activeTabId) || tabs[0];
   const isNewTab = activeTab.url === "about:blank" || activeTab.url === "";
 
-  // Initialize first tab on mount
-  useEffect(() => {
-    if (typeof window !== "undefined" && window.eduAPI) {
-      window.eduAPI.createTab("session-seed").then(() => {
-        window.eduAPI.selectTab("session-seed");
-        // Load initial URL if needed, or it defaults to blank in main.ts
-        window.eduAPI.loadBrowserView("session-seed", "https://react.dev/learn");
-      });
-    }
-  }, []);
+
 
   const formatUrlLabel = (target: string) => {
     try {
