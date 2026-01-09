@@ -779,38 +779,46 @@ export default function Home() {
         <div className="glass-ultra backdrop-blur-2xl transition-smooth flex flex-col">
 
           {/* Tab Strip */}
-          <div className="flex items-center px-4 pt-4 gap-2 overflow-x-auto no-scrollbar">
+          <div className="flex items-center px-4 pt-4 gap-3 overflow-x-auto no-scrollbar pb-2">
             {tabs.map(tab => (
               <div
                 key={tab.id}
                 onClick={() => switchTab(tab.id)}
-                className={`group relative flex items-center min-w-[160px] max-w-[240px] h-9 px-3 rounded-t-xl text-xs font-medium cursor-pointer transition-colors ${activeTabId === tab.id
-                  ? "bg-white/10 text-foreground border-t border-x border-white/20"
-                  : "bg-transparent text-foreground/50 hover:bg-white/5 hover:text-foreground/80"
+                className={`group relative flex items-center min-w-[160px] max-w-[240px] h-10 px-4 rounded-2xl text-xs font-semibold cursor-pointer transition-spring ${activeTabId === tab.id
+                  ? "glass-ultra text-foreground shadow-[0_8px_24px_rgba(0,0,0,0.06)] scale-[1.02] border-white/60 ring-1 ring-white/40"
+                  : "text-foreground/60 hover:text-foreground hover:bg-white/10 hover:shadow-lg hover:-translate-y-0.5"
                   }`}
               >
-                <span className="truncate flex-1 mr-2">{tab.title || "New Tab"}</span>
-                {tabs.length > 1 && (
+                {/* Active indicator dot */}
+                {activeTabId === tab.id && (
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-2.5 shadow-[0_0_8px_rgba(59,130,246,0.6)] animate-pulse" />
+                )}
+
+                {/* Favicon Placeholder (optional, fits the look) */}
+                {(!activeTabId || activeTabId !== tab.id) && (
+                  <div className={`w-1.5 h-1.5 rounded-full mr-2.5 transition-colors ${tab.url === "about:blank" ? "bg-foreground/20" : "bg-foreground/40"}`} />
+                )}
+
+                <span className="truncate flex-1 select-none">{tab.title || "New Tab"}</span>
+
+                {/* Close Button - Always visible on active, on hover for others */}
+                {(tabs.length > 1) && (
                   <button
                     onClick={(e) => closeTab(e, tab.id)}
-                    className="opacity-0 group-hover:opacity-100 p-1 rounded-md hover:bg-white/10 transition-all"
+                    className={`p-1 rounded-full hover:bg-red-500/10 hover:text-red-600 transition-colors ml-1 ${activeTabId === tab.id ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                      }`}
                   >
                     <Icon name="x" className="w-3 h-3" />
                   </button>
-                )}
-
-                {/* Active Indicator Line */}
-                {activeTabId === tab.id && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
                 )}
               </div>
             ))}
             <button
               onClick={createNewTab}
-              className="w-8 h-8 rounded-full flex items-center justify-center text-foreground/50 hover:text-foreground hover:bg-white/10 transition-colors ml-1"
+              className="w-10 h-10 rounded-2xl flex items-center justify-center text-foreground/50 hover:text-foreground hover:bg-white/10 hover:shadow-lg hover:-translate-y-0.5 transition-spring ml-1 active:scale-95"
               title="New Tab"
             >
-              <Icon name="plus" className="w-4 h-4" />
+              <Icon name="plus" className="w-5 h-5" />
             </button>
           </div>
 
