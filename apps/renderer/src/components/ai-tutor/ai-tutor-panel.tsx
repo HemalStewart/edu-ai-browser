@@ -1,15 +1,105 @@
 import React from "react";
+import { MarkdownRenderer } from "@/components/markdown-renderer";
+
+export interface PendingAiAction {
+    type: 'quiz' | 'summarize' | 'explain' | 'keypoints' | 'flashcards';
+    context?: { title: string; content: string };
+}
 
 interface AITutorPanelProps {
     onAnalyzePage?: () => Promise<{ title: string; content: string } | null>;
+    pendingAction?: PendingAiAction | null;
+    onActionComplete?: () => void;
 }
 
-export function AITutorPanel({ onAnalyzePage }: AITutorPanelProps) {
+export function AITutorPanel({ onAnalyzePage, pendingAction, onActionComplete }: AITutorPanelProps) {
     const [messages, setMessages] = React.useState<Array<{ role: 'ai' | 'user', text: string }>>([
         { role: 'ai', text: "Hello! I'm your AI Tutor. I can help you understand this validation logic. Would you like a summary of the active page?" }
     ]);
     const initialProvider = (process.env.NEXT_PUBLIC_AI_PROVIDER_DEFAULT === "openai" ? "openai" : "gemini") as 'gemini' | 'openai';
     const [provider, setProvider] = React.useState<'gemini' | 'openai'>(initialProvider);
+    const processingAction = React.useRef<string | null>(null);
+
+    React.useEffect(() => {
+        if (pendingAction && pendingAction.context && processingAction.current !== pendingAction.type) {
+            processingAction.current = pendingAction.type;
+            const { title, content } = pendingAction.context;
+
+            const executeAction = async () => {
+                let prompt = "";
+                let userMessage = "";
+
+                switch (pendingAction.type) {
+                    case 'quiz':
+                        userMessage = `Generate a quiz for: ${title}`;
+                        prompt = `Based on the following content, generate a 5-question multiple choice quiz to test understanding. 
+                    
+Content: "${title}"
+${content.slice(0, 15000)}...
+
+Format:
+1. Question
+   a) Option
+   b) Option
+   c) Option
+   d) Option
+   Answer: X`;
+                        break;
+                    case 'summarize':
+                        userMessage = `Summarize: ${title}`;
+                        prompt = `Provide a concise summary of the following content, highlighting the main argument and conclusion.
+                        
+Content: "${title}"
+${content.slice(0, 15000)}...`;
+                        break;
+                    case 'explain':
+                        userMessage = `Explain this page: ${title}`;
+                        prompt = `Explain the following content in simple terms, as if you were teaching a beginner. Use analogies if helpful.
+                        
+Content: "${title}"
+${content.slice(0, 15000)}...`;
+                        break;
+                    case 'keypoints':
+                        userMessage = `Key points for: ${title}`;
+                        prompt = `Extract the key takeaways and important points from the following content as a bulleted list.
+                        
+Content: "${title}"
+${content.slice(0, 15000)}...`;
+                        break;
+                    case 'flashcards':
+                        userMessage = `Create flashcards for: ${title}`;
+                        prompt = `Create a set of 5-10 flashcards based on the key concepts in this content. Format them as "Front: [Concept] | Back: [Definition/Answer]".
+                        
+Content: "${title}"
+${content.slice(0, 15000)}...`;
+                        break;
+                    default:
+                        return;
+                }
+
+                setMessages(prev => [...prev, { role: 'user', text: userMessage }]);
+
+                try {
+                    if (window.eduAPI) {
+                        const response = await window.eduAPI.aiChat({
+                            messages: [{ role: 'user', text: prompt }],
+                            context: { title, content },
+                            provider
+                        });
+                        setMessages(prev => [...prev, { role: 'ai', text: response }]);
+                    }
+                } catch (e) {
+                    console.error(`${pendingAction.type} failed`, e);
+                    setMessages(prev => [...prev, { role: 'ai', text: `Sorry, I couldn't complete the ${pendingAction.type} request right now.` }]);
+                } finally {
+                    processingAction.current = null;
+                    onActionComplete?.();
+                }
+            };
+
+            executeAction();
+        }
+    }, [pendingAction, provider, onActionComplete]);
 
     const handleAnalyze = async () => {
         if (onAnalyzePage) {
@@ -93,7 +183,7 @@ export function AITutorPanel({ onAnalyzePage }: AITutorPanelProps) {
                             ? 'glass-panel rounded-tl-none spring-enter'
                             : 'bg-blue-500 text-white rounded-tr-none glow-hover'} 
                             p-4 rounded-3xl max-w-[90%] text-sm leading-relaxed transition-spring`}>
-                            {msg.text}
+                            {msg.role === 'ai' ? <MarkdownRenderer content={msg.text} /> : msg.text}
                         </div>
                         <span className={`text-xs font-medium text-foreground/40 ${msg.role === 'ai' ? 'ml-2' : 'mr-2'}`}>
                             {msg.role === 'ai' ? 'AI Tutor' : 'You'}

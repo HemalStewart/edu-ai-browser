@@ -3,7 +3,8 @@
 import { useState, useRef, useEffect } from "react";
 import { WorkspaceLayout } from "@/components/workspace-layout";
 import { LibraryPanel } from "@/components/library/library-panel";
-import { AITutorPanel } from "@/components/ai-tutor/ai-tutor-panel";
+import { AITutorPanel, PendingAiAction } from "@/components/ai-tutor/ai-tutor-panel";
+import { MarkdownRenderer } from "@/components/markdown-renderer";
 
 interface DiscoveryCard {
   title: string;
@@ -386,6 +387,8 @@ export default function Home() {
   const [readerSyncedAt, setReaderSyncedAt] = useState<string | null>(null);
   const [selectionText, setSelectionText] = useState("");
   const [readerExplainState, setReaderExplainState] = useState<ReaderExplainState>({ status: "idle" });
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [pendingAiAction, setPendingAiAction] = useState<PendingAiAction | null>(null);
 
   const nextSessionId = () => {
     sessionCounterRef.current += 1;
@@ -406,6 +409,61 @@ export default function Home() {
 
   const activeTab = tabs.find((t) => t.id === activeTabId) || tabs[0];
   const isNewTab = activeTab.url === "about:blank" || activeTab.url === "";
+
+  // Drag and Drop State
+  const [isDragging, setIsDragging] = useState(false);
+  const dragCounter = useRef(0);
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current += 1;
+    if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+      setIsDragging(true);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current -= 1;
+    if (dragCounter.current === 0) {
+      setIsDragging(false);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    dragCounter.current = 0;
+
+    // Check for URL
+    const url = e.dataTransfer.getData("text/uri-list") || e.dataTransfer.getData("text/plain");
+    if (url && (url.startsWith("http") || url.startsWith("www"))) {
+      navigate(url);
+      return;
+    }
+
+    // Check for Files
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const file = e.dataTransfer.files[0];
+      // Mock File Handling -> Reader Mode
+      setReaderMode(true);
+      setReaderLoading(true);
+      setReaderContext({
+        title: file.name,
+        // Mock content for the file since we can't fully read it without FS access in this context easily yet
+        content: `Extracted content from ${file.name}...\n\n(This is a simulation of local file reading. In a full implementation, we would stream the file content here.)`
+      });
+      setTimeout(() => setReaderLoading(false), 1500);
+    }
+  };
 
 
 
@@ -625,6 +683,21 @@ export default function Home() {
     if (typeof window !== "undefined" && window.eduAPI) {
       window.eduAPI.loadBrowserView(activeTabId, target);
     }
+
+    // Simulate loading progress
+    setLoadingProgress(10);
+    const interval = setInterval(() => {
+      setLoadingProgress(prev => {
+        if (prev >= 90) return prev;
+        return prev + Math.random() * 15;
+      });
+    }, 200);
+
+    setTimeout(() => {
+      clearInterval(interval);
+      setLoadingProgress(100);
+      setTimeout(() => setLoadingProgress(0), 500);
+    }, 1500);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -722,6 +795,14 @@ export default function Home() {
       title: `${tool.title} queued`,
       detail: `Anchored to “${anchorTitle}”. Results will surface in the AI Tutor shortly.`,
     });
+
+    if (['quiz', 'summarize', 'explain', 'keypoints', 'flashcards'].includes(tool.id)) {
+      setPendingAiAction({
+        type: tool.id as any,
+        context: { title: anchorTitle, content: context.content }
+      });
+      setTutorCollapsed(false);
+    }
   };
 
   // Tab management handlers
@@ -819,11 +900,38 @@ export default function Home() {
           discoverCards={DISCOVERY_DECK}
         />
       }
-      rightPanel={<AITutorPanel onAnalyzePage={handleAnalyzePage} />}
+      rightPanel={
+        <AITutorPanel
+          onAnalyzePage={handleAnalyzePage}
+          pendingAction={pendingAiAction}
+          onActionComplete={() => setPendingAiAction(null)}
+        />
+      }
       hideLeftPanel={libraryCollapsed}
       hideRightPanel={tutorCollapsed}
     >
-      <div className="h-full flex flex-col bg-transparent relative z-0">
+      <div
+        className="h-full flex flex-col bg-transparent relative z-0"
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+      >
+        {/* Drop Overlay */}
+        {isDragging && (
+          <div className="absolute inset-0 z-50 glass-ultra backdrop-blur-md flex items-center justify-center animate-in fade-in duration-200">
+            <div className="p-10 rounded-3xl border-2 border-dashed border-blue-500/50 bg-blue-500/10 flex flex-col items-center gap-4 text-center">
+              <div className="w-16 h-16 rounded-full bg-blue-500 flex items-center justify-center text-white shadow-xl animate-bounce">
+                <Icon name="plus" className="w-8 h-8" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-foreground">Drop to Open</h3>
+                <p className="text-foreground/60 text-lg">Instant reader & viewer</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Header / Command Bar */}
         <div className="glass-ultra backdrop-blur-2xl transition-smooth flex flex-col">
 
@@ -976,7 +1084,15 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 flex flex-col overflow-hidden relative">
+          {loadingProgress > 0 && (
+            <div className="absolute top-0 left-0 right-0 h-[2px] z-50 bg-transparent">
+              <div
+                className="h-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)] transition-all ease-out duration-300 rounded-r-full"
+                style={{ width: `${loadingProgress}%`, opacity: loadingProgress === 100 ? 0 : 1 }}
+              />
+            </div>
+          )}
           <div className="flex-1 w-full relative" ref={browserContainerRef}>
             {!readerMode && isNewTab && (
               <div className="absolute inset-0 flex flex-col items-center justify-center p-8 pointer-events-auto z-10 animate-in fade-in zoom-in-95 duration-500">
@@ -1063,11 +1179,10 @@ export default function Home() {
                   )}
                   {/* ... (Existing reader render logic would go here if I had it fully, but I think I should keep what was likely there or just the simple rendering) */}
                   {/* Re-implementing the simple reader rendering if it was complex, but for now assuming it was just mapping paragraphs */}
-                  {!readerLoading && readerParagraphs.map((para, i) => (
-                    <p key={i} className="text-[1.05rem] leading-[1.7] text-foreground/90 max-w-[65ch]">
-                      {para}
-                    </p>
-                  ))}
+                  {/* Use Markdown Renderer for rich text support */}
+                  {!readerLoading && readerContext?.content && (
+                    <MarkdownRenderer content={readerContext.content} />
+                  )}
                   {!readerLoading && readerParagraphs.length === 0 && (
                     <div className="text-center py-20 text-foreground/40">
                       <p>No content extracted yet.</p>

@@ -159,15 +159,37 @@ function createWindow() {
     try {
       // Execute script in the BrowserView to get title and simple text
       const result = await view.webContents.executeJavaScript(`
-  (function () {
-    const title = document.title;
-    const selection = window.getSelection().toString();
-    if (selection) return { title, content: selection, selection: true };
+        (function () {
+          const title = document.title;
+          const selection = window.getSelection().toString();
+          if (selection) return { title, content: selection, selection: true };
 
-    const body = document.body.innerText;
-    return { title, content: body };
-  })();
-`);
+          try {
+            const root = document.querySelector('article') || document.querySelector('main') || document.body;
+            const elements = Array.from(root.querySelectorAll('p, h1, h2, h3, h4, li, blockquote, pre'));
+            let content = '';
+            
+            elements.forEach(el => {
+              if (el.closest('nav, footer, header, aside, .menu')) return;
+              const text = el.innerText.trim();
+              if (!text) return;
+              
+              const tag = el.tagName.toLowerCase();
+              if (tag === 'h1') content += '# ' + text + '\\n\\n';
+              else if (tag === 'h2') content += '## ' + text + '\\n\\n';
+              else if (tag === 'h3') content += '### ' + text + '\\n\\n';
+              else if (tag === 'li') content += '- ' + text + '\\n';
+              else if (tag === 'blockquote') content += '> ' + text + '\\n\\n';
+              else if (tag === 'pre') content += '\`\`\`\\n' + text + '\\n\`\`\`\\n\\n';
+              else content += text + '\\n\\n';
+            });
+            
+            if (content.length > 50) return { title, content };
+          } catch(e) {}
+
+          return { title, content: document.body.innerText };
+        })();
+      `);
       return result;
     } catch (e) {
       console.error("Extraction failed:", e);
