@@ -5,6 +5,9 @@ import { WorkspaceLayout } from "@/components/workspace-layout";
 import { LibraryPanel } from "@/components/library/library-panel";
 import { AITutorPanel, PendingAiAction } from "@/components/ai-tutor/ai-tutor-panel";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
+import { HistoryView } from "@/components/views/history-view";
+import { BookmarksView } from "@/components/views/bookmarks-view";
+import { SettingsView } from "@/components/views/settings-view";
 
 interface DiscoveryCard {
   title: string;
@@ -409,6 +412,7 @@ export default function Home() {
 
   const activeTab = tabs.find((t) => t.id === activeTabId) || tabs[0];
   const isNewTab = activeTab.url === "about:blank" || activeTab.url === "";
+  const isInternalPage = activeTab.url.startsWith("edu://");
 
   // Drag and Drop State
   const [isDragging, setIsDragging] = useState(false);
@@ -606,7 +610,7 @@ export default function Home() {
       });
     };
 
-    if (readerMode || isNewTab) {
+    if (readerMode || isNewTab || isInternalPage) {
       if (activeTabId) window.eduAPI.resizeBrowserView(activeTabId, { x: 0, y: 0, width: 0, height: 0 });
       return () => {
         // if (activeTabId) window.eduAPI.resizeBrowserView(activeTabId, { x: 0, y: 0, width: 0, height: 0 });
@@ -632,7 +636,7 @@ export default function Home() {
         window.eduAPI.resizeBrowserView(activeTabId, { x: 0, y: 0, width: 0, height: 0 });
       }
     };
-  }, [libraryCollapsed, tutorCollapsed, readerMode, activeTabId, isReady, isNewTab]);
+  }, [libraryCollapsed, tutorCollapsed, readerMode, activeTabId, isReady, isNewTab, isInternalPage]);
 
   // Add isReady to dependency of resize effect
 
@@ -642,7 +646,7 @@ export default function Home() {
     let target = (targetOverride ?? urlValue).trim();
     if (!target) return;
 
-    if (!/^https?:\/\//i.test(target)) {
+    if (!/^https?:\/\//i.test(target) && !/^edu:\/\//i.test(target) && !/^about:/i.test(target)) {
       target = `https://${target}`;
     }
 
@@ -668,7 +672,7 @@ export default function Home() {
     setRecentSessions((prev) => {
       const filtered = prev.filter((entry) => entry.url !== target);
       const nextEntry: RecentSession = {
-        id: activeTabId, // Use active tab ID as session ID for persistence logic
+        id: `recent-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         title,
         url: target,
         status: "Live",
@@ -681,7 +685,11 @@ export default function Home() {
     setTutorCollapsed(true);
 
     if (typeof window !== "undefined" && window.eduAPI) {
-      window.eduAPI.loadBrowserView(activeTabId, target);
+      // Only load strict web URLs in the BrowserView. 
+      // Internal edu:// pages are handled by the React renderer overlay.
+      if (!target.startsWith("edu://")) {
+        window.eduAPI.loadBrowserView(activeTabId, target);
+      }
     }
 
     // Simulate loading progress
@@ -1064,7 +1072,7 @@ export default function Home() {
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="flex-1 flex items-center glass-ultra rounded-2xl border-2 border-white/80 px-4 py-3 shadow-md backdrop-blur-lg focus-within:ring-2 focus-within:ring-blue-500/50 focus-within:border-blue-500/40 transition-smooth">
+              <div className="flex-1 flex items-center glass-ultra rounded-2xl border-2 border-white/80 px-4 py-3 shadow-md backdrop-blur-lg focus-within:ring-2 focus-within:ring-blue-500/50 focus-within:border-blue-500/40 transition-smooth group">
                 <Icon name="search" className="w-4 h-4 text-foreground/50 mr-3" />
                 <input
                   value={urlValue}
@@ -1073,6 +1081,14 @@ export default function Home() {
                   className="bg-transparent border-none focus:outline-none w-full text-foreground placeholder:text-foreground/50 text-sm font-medium"
                   placeholder="Drop a link or search term..."
                 />
+                {/* Bookmark Toggle */}
+                <button
+                  onClick={() => window.eduAPI.addBookmark({ title: activeTab.title, url: activeTab.url })}
+                  className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-black/5 rounded-full text-foreground/40 hover:text-blue-500 transition-all"
+                  title="Bookmark this page"
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>
+                </button>
               </div>
               <button
                 className="px-5 py-2 rounded-2xl text-sm font-semibold text-white bg-blue-500 shadow-lg hover:-translate-y-1 hover:shadow-xl transition-spring glow-hover active:scale-95"
@@ -1094,7 +1110,15 @@ export default function Home() {
             </div>
           )}
           <div className="flex-1 w-full relative" ref={browserContainerRef}>
-            {!readerMode && isNewTab && (
+            {isInternalPage && (
+              <div className="absolute inset-0 z-20 bg-background/95 backdrop-blur-xl animate-in fade-in overflow-hidden">
+                {activeTab.url === 'edu://history' && <HistoryView onNavigate={navigate} />}
+                {activeTab.url === 'edu://bookmarks' && <BookmarksView onNavigate={navigate} />}
+                {activeTab.url === 'edu://settings' && <SettingsView />}
+              </div>
+            )}
+
+            {!readerMode && isNewTab && !isInternalPage && (
               <div className="absolute inset-0 flex flex-col items-center justify-center p-8 pointer-events-auto z-10 animate-in fade-in zoom-in-95 duration-500">
                 <div className="text-center mb-10">
                   <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-br from-foreground to-foreground/50 mb-3">Where to?</h1>

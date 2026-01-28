@@ -255,7 +255,23 @@ export function LibraryPanel({
             </div>
 
             <div className="space-y-3 mt-auto pt-2">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-foreground/40">Library</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-foreground/40">Browser</p>
+                <div className="grid grid-cols-3 gap-2">
+                    <button onClick={() => onQuickLaunch("edu://history")} className="flex flex-col items-center justify-center p-3 rounded-2xl glass-ultra border border-white/60 hover:bg-white/40 transition-spring liquid-hover group">
+                        <svg className="w-5 h-5 text-foreground/70 mb-1 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                        <span className="text-[10px] font-semibold text-foreground/70">History</span>
+                    </button>
+                    <button onClick={() => onQuickLaunch("edu://bookmarks")} className="flex flex-col items-center justify-center p-3 rounded-2xl glass-ultra border border-white/60 hover:bg-white/40 transition-spring liquid-hover group">
+                        <svg className="w-5 h-5 text-foreground/70 mb-1 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>
+                        <span className="text-[10px] font-semibold text-foreground/70">Bookmarks</span>
+                    </button>
+                    <button onClick={() => onQuickLaunch("edu://settings")} className="flex flex-col items-center justify-center p-3 rounded-2xl glass-ultra border border-white/60 hover:bg-white/40 transition-spring liquid-hover group">
+                        <svg className="w-5 h-5 text-foreground/70 mb-1 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.18-.08a2 2 0 0 0-2 2v.44a2 2 0 0 0 2 2h.18a2 2 0 0 1 1.73 1l.25.43a2 2 0 0 1 0 2l-.08.18a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.18.08a2 2 0 0 0 2-2v-.44a2 2 0 0 0-2-2h-.18a2 2 0 0 1-1.73-1l-.25-.43a2 2 0 0 1 0-2l.08-.18a2 2 0 0 0-2-2z" /><circle cx="12" cy="12" r="3" /></svg>
+                        <span className="text-[10px] font-semibold text-foreground/70">Settings</span>
+                    </button>
+                </div>
+
+                <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-foreground/40 mt-4">Library</p>
                 {libraryItems.map((item) => (
                     <div
                         key={item.title}

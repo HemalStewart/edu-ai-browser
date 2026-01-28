@@ -11,7 +11,8 @@
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "dotenv": "^17.2.3",
-    "electron": "^31.0.0"
+    "electron": "^31.0.0",
+    "electron-store": "^11.0.2"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

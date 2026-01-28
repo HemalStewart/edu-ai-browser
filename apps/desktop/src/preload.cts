@@ -22,4 +22,17 @@ contextBridge.exposeInMainWorld("eduAPI", {
   extractText: (tabId: string) => ipcRenderer.invoke("browser-view:extract-text", tabId),
 
   aiChat: (payload: any) => ipcRenderer.invoke("ai:chat", payload),
+
+  // History
+  getHistory: () => ipcRenderer.invoke("history:get"),
+  clearHistory: () => ipcRenderer.invoke("history:clear"),
+
+  // Bookmarks
+  getBookmarks: () => ipcRenderer.invoke("bookmarks:get"),
+  addBookmark: (bookmark: { title: string; url: string; favicon?: string }) => ipcRenderer.invoke("bookmarks:add", bookmark),
+  removeBookmark: (id: string) => ipcRenderer.invoke("bookmarks:remove", id),
+
+  // Settings
+  getSettings: () => ipcRenderer.invoke("settings:get"),
+  updateSettings: (settings: any) => ipcRenderer.invoke("settings:update", settings),
 });

@@ -12,6 +12,19 @@ export interface IElectronAPI {
     refresh: (tabId: string) => void;
     extractText: (tabId: string) => Promise<{ title: string; content: string; selection?: boolean; error?: string }>;
     aiChat: (payload: { messages: Array<{ role: string, text: string }>, context?: { title: string, content: string }, provider?: string }) => Promise<string>;
+
+    // History
+    getHistory: () => Promise<Array<{ id: string; title: string; url: string; timestamp: number; favicon?: string }>>;
+    clearHistory: () => Promise<void>;
+
+    // Bookmarks
+    getBookmarks: () => Promise<Array<{ id: string; title: string; url: string; favicon?: string; createdAt: number }>>;
+    addBookmark: (bookmark: { title: string; url: string; favicon?: string }) => Promise<any>;
+    removeBookmark: (id: string) => Promise<void>;
+
+    // Settings
+    getSettings: () => Promise<any>;
+    updateSettings: (settings: any) => Promise<any>;
 }
 
 declare global {

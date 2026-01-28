@@ -14,4 +14,14 @@ contextBridge.exposeInMainWorld("eduAPI", {
     refresh: (tabId) => ipcRenderer.send("browser-view:refresh", tabId),
     extractText: (tabId) => ipcRenderer.invoke("browser-view:extract-text", tabId),
     aiChat: (payload) => ipcRenderer.invoke("ai:chat", payload),
+    // History
+    getHistory: () => ipcRenderer.invoke("history:get"),
+    clearHistory: () => ipcRenderer.invoke("history:clear"),
+    // Bookmarks
+    getBookmarks: () => ipcRenderer.invoke("bookmarks:get"),
+    addBookmark: (bookmark) => ipcRenderer.invoke("bookmarks:add", bookmark),
+    removeBookmark: (id) => ipcRenderer.invoke("bookmarks:remove", id),
+    // Settings
+    getSettings: () => ipcRenderer.invoke("settings:get"),
+    updateSettings: (settings) => ipcRenderer.invoke("settings:update", settings),
 });

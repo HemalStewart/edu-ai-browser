@@ -3,11 +3,18 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { HistoryManager } from "./managers/history.js";
+import { BookmarksManager } from "./managers/bookmarks.js";
+import { SettingsManager } from "./managers/settings.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
+
+// Suppress Electron Security Warnings (Dev Only)
+process.env.ELECTRON_ENABLE_SECURITY_WARNINGS = "false";
+
 // Fallback: try loading from CWD if not found above (for different build structures)
 if (!process.env.GEMINI_API_KEY) {
   dotenv.config({ path: path.join(process.cwd(), "../../.env") });
@@ -20,6 +27,10 @@ let mainWindow: BrowserWindow | null = null;
 const tabs = new Map<string, BrowserView>();
 let activeTabId: string | null = null;
 
+const historyManager = new HistoryManager();
+const bookmarksManager = new BookmarksManager();
+const settingsManager = new SettingsManager();
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1400,
@@ -30,7 +41,7 @@ function createWindow() {
       contextIsolation: true,
       nodeIntegration: false,
       preload: (() => {
-        const preloadPath = path.join(__dirname, "preload.mjs");
+        const preloadPath = path.join(__dirname, "preload.cjs");
         console.log("----------------------------------------");
         return preloadPath;
       })(),
@@ -63,6 +74,25 @@ function createWindow() {
       // Initialize bounds to 0 until resized
       view.setBounds({ x: 0, y: 0, width: 0, height: 0 });
     }
+
+    // Attach history listener
+    view.webContents.on('did-navigate', (event, url) => {
+      const title = view.webContents.getTitle();
+      if (url && !url.startsWith('about:') && !url.startsWith('chrome:')) {
+        historyManager.addEntry({ title, url });
+      }
+    });
+
+    view.webContents.on('page-title-updated', (event, title) => {
+      const url = view.webContents.getURL();
+      if (url && !url.startsWith('about:') && !url.startsWith('chrome:')) {
+        // Optionally update the existing entry or just let did-navigate handle main loads
+        // For now, simpler to just rely on navigation, but title might come later.
+        // historyManager.addEntry({ title, url }); 
+        // Deduplication logic handles spam?
+      }
+    });
+
     return true;
   });
 
@@ -301,6 +331,15 @@ function createWindow() {
       return "Sorry, I encountered an error connecting to the AI.";
     }
   });
+
+  // --- Persistence handlers ---
+  ipcMain.handle("history:get", () => historyManager.getEntries());
+  ipcMain.handle("history:clear", () => historyManager.clear());
+  ipcMain.handle("bookmarks:get", () => bookmarksManager.getBookmarks());
+  ipcMain.handle("bookmarks:add", (_, bookmark) => bookmarksManager.addBookmark(bookmark));
+  ipcMain.handle("bookmarks:remove", (_, id) => bookmarksManager.removeBookmark(id));
+  ipcMain.handle("settings:get", () => settingsManager.getSettings());
+  ipcMain.handle("settings:update", (_, settings) => settingsManager.updateSettings(settings));
 
 
   if (isDev) {
