@@ -2,7 +2,10 @@
   "name": "edu-ai-browser",
   "private": true,
   "scripts": {
-    "dev": "concurrently -n RENDERER,DESKTOP \"pnpm --filter ./apps/renderer dev\" \"wait-on http://localhost:3000 && pnpm --filter ./apps/desktop dev\""
+    "dev": "concurrently -n RENDERER,DESKTOP \"pnpm --filter ./apps/renderer dev\" \"wait-on http://localhost:3000 && pnpm --filter ./apps/desktop dev\"",
+    "mobile:run": "cd apps/mobile && flutter run",
+    "mobile:test": "cd apps/mobile && flutter test",
+    "mobile:analyze": "cd apps/mobile && flutter analyze"
   },
   "devDependencies": {
     "concurrently": "^9.0.0",
