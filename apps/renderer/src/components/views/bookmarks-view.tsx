@@ -1,44 +1,73 @@
 import { useEffect, useState } from "react";
+import { Icon } from "@/components/icons";
+import type { IElectronAPI } from "@/types/global";
+
+type Bookmark = Awaited<ReturnType<IElectronAPI["getBookmarks"]>>[number];
 
 export function BookmarksView({ onNavigate }: { onNavigate: (url: string) => void }) {
-    const [bookmarks, setBookmarks] = useState<any[]>([]);
+    const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
 
     useEffect(() => {
-        window.eduAPI.getBookmarks().then(setBookmarks);
+        window.eduAPI?.getBookmarks().then(setBookmarks);
     }, []);
 
     const removeBookmark = async (e: React.MouseEvent, id: string) => {
         e.stopPropagation();
-        await window.eduAPI.removeBookmark(id);
+        await window.eduAPI?.removeBookmark(id);
         setBookmarks(prev => prev.filter(b => b.id !== id));
     };
 
     return (
-        <div className="p-8 max-w-5xl mx-auto h-full overflow-y-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <h1 className="text-3xl font-bold text-foreground mb-8">Bookmarks</h1>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {bookmarks.map((b) => (
-                    <div key={b.id} onClick={() => onNavigate(b.url)}
-                        className="group relative p-5 rounded-3xl glass-ultra border border-white/50 hover:border-blue-500/30 cursor-pointer transition-all hover:shadow-lg hover:-translate-y-1">
-                        <div className="flex items-start justify-between mb-2">
-                            <div className="p-2 bg-blue-500/10 rounded-xl text-blue-600">
-                                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></svg>
+        <div className="h-full overflow-y-auto">
+            <div className="mx-auto max-w-5xl px-8 py-8">
+                <div className="border-b border-line pb-5">
+                    <p className="kicker">edu://bookmarks</p>
+                    <h1 className="mt-1.5 text-[28px] font-semibold tracking-[-0.02em] text-fg">Bookmarks</h1>
+                    <p className="mt-1 text-[13px] text-fg-3">
+                        {bookmarks.length} saved {bookmarks.length === 1 ? "page" : "pages"}. Use the bookmark button in the address bar to add more.
+                    </p>
+                </div>
+
+                <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+                    {bookmarks.map((b) => (
+                        <div
+                            key={b.id}
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => onNavigate(b.url)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter" || e.key === " ") {
+                                    e.preventDefault();
+                                    onNavigate(b.url);
+                                }
+                            }}
+                            className="group relative rounded border border-line bg-card p-4 transition-colors hover:border-line-active"
+                        >
+                            <div className="mb-3 flex items-start justify-between">
+                                <span className="flex h-8 w-8 items-center justify-center rounded border border-line text-fg-2">
+                                    <Icon name="bookmark" className="h-4 w-4" />
+                                </span>
+                                <button
+                                    type="button"
+                                    onClick={(e) => removeBookmark(e, b.id)}
+                                    aria-label={`Remove ${b.title}`}
+                                    className="flex h-7 w-7 items-center justify-center rounded text-fg-3 opacity-0 transition-all hover:bg-raised hover:text-fg focus-visible:opacity-100 group-hover:opacity-100"
+                                >
+                                    <Icon name="x" className="h-3.5 w-3.5" />
+                                </button>
                             </div>
-                            <button onClick={(e) => removeBookmark(e, b.id)}
-                                className="opacity-0 group-hover:opacity-100 p-2 text-foreground/40 hover:text-red-500 transition-all bg-white/50 rounded-full hover:bg-white/80">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                            </button>
+                            <h3 className="truncate text-[14px] font-medium text-fg">{b.title}</h3>
+                            <p className="mt-1 truncate font-mono text-[11.5px] text-fg-3">{b.url}</p>
                         </div>
-                        <h3 className="font-bold text-base text-foreground truncate">{b.title}</h3>
-                        <p className="text-xs text-foreground/50 truncate mt-1">{b.url}</p>
-                    </div>
-                ))}
-                {bookmarks.length === 0 && (
-                    <div className="col-span-full text-center py-20 text-foreground/40">
-                        <p className="text-lg font-medium">No bookmarks yet</p>
-                        <p className="text-sm opacity-70">Save your favorite pages for quick access.</p>
-                    </div>
-                )}
+                    ))}
+                    {bookmarks.length === 0 && (
+                        <div className="col-span-full rounded-lg border border-dashed border-line px-6 py-16 text-center">
+                            <Icon name="bookmark" className="mx-auto h-6 w-6 text-fg-3" />
+                            <p className="mt-3 text-[15px] font-medium text-fg">No bookmarks yet</p>
+                            <p className="mt-1 text-[13px] text-fg-3">Save your favorite pages for quick access.</p>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

@@ -1,79 +1,94 @@
 import { useEffect, useState } from "react";
+import { Icon, type IconName } from "@/components/icons";
+
+interface RendererSettings {
+    theme?: "light" | "dark" | "system";
+    defaultSearchEngine?: string;
+    restoreSession?: boolean;
+}
+
+function SettingRow({
+    icon,
+    title,
+    description,
+    children,
+}: {
+    icon: IconName;
+    title: string;
+    description: string;
+    children: React.ReactNode;
+}) {
+    return (
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line-muted px-5 py-4 last:border-b-0">
+            <div className="flex items-start gap-3">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded border border-line text-fg-2">
+                    <Icon name={icon} className="h-4 w-4" />
+                </span>
+                <div>
+                    <p className="text-[14px] font-medium text-fg">{title}</p>
+                    <p className="mt-0.5 text-[12.5px] text-fg-3">{description}</p>
+                </div>
+            </div>
+            {children}
+        </div>
+    );
+}
 
 export function SettingsView() {
-    const [settings, setSettings] = useState<any>({});
+    const [settings, setSettings] = useState<RendererSettings>({});
 
     useEffect(() => {
-        window.eduAPI.getSettings().then(setSettings);
+        window.eduAPI?.getSettings().then((loaded) => setSettings(loaded ?? {}));
     }, []);
 
-    const update = async (key: string, value: any) => {
+    const update = async <K extends keyof RendererSettings>(key: K, value: RendererSettings[K]) => {
         const newSettings = { ...settings, [key]: value };
         setSettings(newSettings);
-        await window.eduAPI.updateSettings(newSettings);
+        await window.eduAPI?.updateSettings(newSettings);
+        window.dispatchEvent(new CustomEvent("edu-settings-change", { detail: newSettings }));
     };
 
-    if (!settings) return null;
-
     return (
-        <div className="p-8 max-w-3xl mx-auto h-full overflow-y-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <h1 className="text-3xl font-bold text-foreground mb-8">Settings</h1>
+        <div className="h-full overflow-y-auto">
+            <div className="mx-auto max-w-3xl px-8 py-8">
+                <div className="border-b border-line pb-5">
+                    <p className="kicker">edu://settings</p>
+                    <h1 className="mt-1.5 text-[28px] font-semibold tracking-[-0.02em] text-fg">Settings</h1>
+                    <p className="mt-1 text-[13px] text-fg-3">Browser preferences are stored locally on this device.</p>
+                </div>
 
-            <div className="space-y-6">
-                <section className="glass-ultra p-6 rounded-3xl border border-white/50 shadow-sm">
-                    <h3 className="font-semibold text-lg mb-4 text-foreground flex items-center gap-2">
-                        <svg className="w-5 h-5 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v20M2 12h20M12 12a5 5 0 0 1 5-5 5 5 0 0 1 5 5" /></svg>
-                        Appearance
-                    </h3>
-                    <div className="flex items-center justify-between">
-                        <label className="text-foreground/80 font-medium text-sm">Theme</label>
-                        <select
-                            value={settings.theme || 'system'}
-                            onChange={(e) => update('theme', e.target.value)}
-                            className="bg-white/50 border border-white/60 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-foreground cursor-pointer hover:bg-white/80 transition-colors"
-                        >
-                            <option value="light">Light</option>
-                            <option value="dark">Dark</option>
-                            <option value="system">System</option>
-                        </select>
-                    </div>
-                </section>
+                <div className="mt-6 overflow-hidden rounded-lg border border-line bg-pane">
+                    <SettingRow icon="layers" title="Appearance" description="OLED monochrome. True black canvas, hairline structure, no colour.">
+                        <span className="flex h-8 items-center gap-2 rounded border border-line px-2.5 font-mono text-[11px] uppercase tracking-[0.08em] text-fg-2">
+                            <span className="h-2 w-2 rounded-full border border-fg bg-[linear-gradient(90deg,#fff_50%,transparent_50%)]" />
+                            Dark only
+                        </span>
+                    </SettingRow>
 
-                <section className="glass-ultra p-6 rounded-3xl border border-white/50 shadow-sm">
-                    <h3 className="font-semibold text-lg mb-4 text-foreground flex items-center gap-2">
-                        <svg className="w-5 h-5 text-purple-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
-                        Search
-                    </h3>
-                    <div className="flex items-center justify-between">
-                        <label className="text-foreground/80 font-medium text-sm">Default Engine</label>
+                    <SettingRow icon="search" title="Default search engine" description="Used when the omnibox text is not a web address.">
                         <select
                             value={settings.defaultSearchEngine || 'google'}
                             onChange={(e) => update('defaultSearchEngine', e.target.value)}
-                            className="bg-white/50 border border-white/60 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-foreground cursor-pointer hover:bg-white/80 transition-colors"
+                            aria-label="Default search engine"
+                            className="h-9 cursor-pointer rounded border border-line bg-canvas px-3 text-[13px] text-fg transition-colors hover:border-line-active focus:border-fg-2 focus:outline-none"
                         >
                             <option value="google">Google</option>
                             <option value="bing">Bing</option>
                             <option value="duckduckgo">DuckDuckGo</option>
                             <option value="perplexity">Perplexity</option>
                         </select>
-                    </div>
-                </section>
+                    </SettingRow>
 
-                <section className="glass-ultra p-6 rounded-3xl border border-white/50 shadow-sm">
-                    <h3 className="font-semibold text-lg mb-4 text-foreground flex items-center gap-2">
-                        <svg className="w-5 h-5 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
-                        Startup
-                    </h3>
-                    <div className="flex items-center justify-between">
-                        <label className="text-foreground/80 font-medium text-sm">Restore previous session</label>
+                    <SettingRow icon="refresh" title="Restore previous session" description="Reopen your tabs the next time the browser starts.">
                         <input
                             type="checkbox"
                             checked={settings.restoreSession ?? true}
                             onChange={(e) => update('restoreSession', e.target.checked)}
-                            className="w-5 h-5 rounded-md accent-blue-500 cursor-pointer"
+                            aria-label="Restore previous session"
+                            className="h-4 w-4 cursor-pointer rounded-sm accent-white"
                         />
-                    </div>
-                </section>
+                    </SettingRow>
+                </div>
             </div>
         </div>
     );

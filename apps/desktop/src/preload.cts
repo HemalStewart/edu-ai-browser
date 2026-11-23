@@ -22,6 +22,36 @@ contextBridge.exposeInMainWorld("eduAPI", {
   extractText: (tabId: string) => ipcRenderer.invoke("browser-view:extract-text", tabId),
 
   aiChat: (payload: any) => ipcRenderer.invoke("ai:chat", payload),
+  aiChatStream: (
+    payload: any,
+    onChunk: (chunk: string) => void,
+    onComplete: () => void,
+    onError: (err: string) => void
+  ) => {
+    const chunkListener = (_: any, chunk: string) => onChunk(chunk);
+    const completeListener = () => {
+      cleanup();
+      onComplete();
+    };
+    const errorListener = (_: any, err: string) => {
+      cleanup();
+      onError(err);
+    };
+
+    const cleanup = () => {
+      ipcRenderer.removeListener("ai:stream:chunk", chunkListener);
+      ipcRenderer.removeListener("ai:stream:complete", completeListener);
+      ipcRenderer.removeListener("ai:stream:error", errorListener);
+    };
+
+    ipcRenderer.on("ai:stream:chunk", chunkListener);
+    ipcRenderer.on("ai:stream:complete", completeListener);
+    ipcRenderer.on("ai:stream:error", errorListener);
+
+    ipcRenderer.send("ai:chat-stream", payload);
+
+    return cleanup;
+  },
 
   // History
   getHistory: () => ipcRenderer.invoke("history:get"),

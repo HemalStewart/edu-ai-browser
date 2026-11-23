@@ -35,7 +35,7 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
-    backgroundColor: "#0a0a0a",
+    backgroundColor: "#000000",
     webPreferences: {
       sandbox: false,
       contextIsolation: true,
@@ -329,6 +329,135 @@ function createWindow() {
     } catch (error) {
       console.error("AI Error:", error);
       return "Sorry, I encountered an error connecting to the AI.";
+    }
+  });
+
+  ipcMain.on("ai:chat-stream", async (event, payload) => {
+    const sender = event.sender;
+    try {
+      const { messages, context, provider: requestedProvider } = (payload ?? {}) as {
+        messages?: Array<{ role: string; text: string }>;
+        context?: { title: string; content: string };
+        provider?: string;
+      };
+
+      if (!Array.isArray(messages) || messages.length === 0) {
+        sender.send("ai:stream:error", "Please send a question first.");
+        return;
+      }
+
+      const sanitizedHistory: Array<{ role: "ai" | "user"; text: string }> = [];
+      let hasSeenUser = false;
+
+      for (const msg of messages.slice(0, -1)) {
+        const normalizedRole = msg.role === "ai" ? "ai" : "user";
+        if (!hasSeenUser && normalizedRole === "ai") continue;
+        if (normalizedRole === "user") hasSeenUser = true;
+
+        sanitizedHistory.push({ role: normalizedRole, text: msg.text });
+      }
+
+      const lastMessage = messages[messages.length - 1];
+      let prompt = lastMessage?.text ?? "";
+      if (context) {
+        prompt = `Context from current page(${context.title}): \n${context.content.substring(0, 5000)} \n\nUser Question: ${prompt} `;
+      }
+
+      const provider = (
+        requestedProvider ||
+        process.env.AI_PROVIDER ||
+        (process.env.OPENAI_API_KEY ? "openai" : "gemini")
+      ).toLowerCase();
+
+      // --- OpenAI Streaming ---
+      if (provider === "openai") {
+        const openAiKey = process.env.OPENAI_API_KEY;
+        if (!openAiKey) {
+          sender.send("ai:stream:error", "Please set OPENAI_API_KEY in .env file.");
+          return;
+        }
+
+        const openAiHistory = sanitizedHistory.map((msg) => ({
+          role: msg.role === "ai" ? "assistant" : "user",
+          content: msg.text,
+        }));
+
+        const openAiModel = process.env.OPENAI_MODEL || "gpt-4o-mini";
+
+        const response = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${openAiKey}`,
+          },
+          body: JSON.stringify({
+            model: openAiModel,
+            messages: [...openAiHistory, { role: "user", content: prompt }],
+            stream: true,
+          }),
+        });
+
+        if (!response.ok || !response.body) {
+          const errorBody = await response.text();
+          sender.send("ai:stream:error", `OpenAI request failed: ${errorBody}`);
+          return;
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n');
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (trimmed.startsWith('data: ') && trimmed !== 'data: [DONE]') {
+              try {
+                const data = JSON.parse(trimmed.slice(6));
+                const content = data.choices?.[0]?.delta?.content;
+                if (content) {
+                  sender.send("ai:stream:chunk", content);
+                }
+              } catch (e) {
+                // ignore parse errors for partial chunks
+              }
+            }
+          }
+        }
+        sender.send("ai:stream:complete");
+        return;
+      }
+
+      // --- Gemini Streaming ---
+      const geminiKey = process.env.GEMINI_API_KEY;
+      if (!geminiKey) {
+        sender.send("ai:stream:error", "Please set GEMINI_API_KEY in .env file.");
+        return;
+      }
+
+      const genAI = new GoogleGenerativeAI(geminiKey);
+      const modelName = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+      const model = genAI.getGenerativeModel({ model: modelName });
+
+      const geminiHistory = sanitizedHistory.map((msg) => ({
+        role: msg.role === "ai" ? "model" : "user",
+        parts: [{ text: msg.text }],
+      }));
+
+      const chat = model.startChat({ history: geminiHistory });
+      const result = await chat.sendMessageStream(prompt);
+
+      for await (const chunk of result.stream) {
+        const chunkText = chunk.text();
+        sender.send("ai:stream:chunk", chunkText);
+      }
+      sender.send("ai:stream:complete");
+
+    } catch (error) {
+      console.error("AI Stream Error:", error);
+      sender.send("ai:stream:error", "Sorry, I encountered an error connecting to the AI.");
     }
   });
 

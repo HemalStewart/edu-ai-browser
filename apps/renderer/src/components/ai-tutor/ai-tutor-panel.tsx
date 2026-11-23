@@ -1,5 +1,6 @@
 import React from "react";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
+import { Icon } from "@/components/icons";
 
 export interface PendingAiAction {
     type: 'quiz' | 'summarize' | 'explain' | 'keypoints' | 'flashcards';
@@ -19,6 +20,12 @@ export function AITutorPanel({ onAnalyzePage, pendingAction, onActionComplete }:
     const initialProvider = (process.env.NEXT_PUBLIC_AI_PROVIDER_DEFAULT === "openai" ? "openai" : "gemini") as 'gemini' | 'openai';
     const [provider, setProvider] = React.useState<'gemini' | 'openai'>(initialProvider);
     const processingAction = React.useRef<string | null>(null);
+    const threadRef = React.useRef<HTMLDivElement>(null);
+
+    React.useEffect(() => {
+        const thread = threadRef.current;
+        if (thread) thread.scrollTop = thread.scrollHeight;
+    }, [messages]);
 
     React.useEffect(() => {
         if (pendingAction && pendingAction.context && processingAction.current !== pendingAction.type) {
@@ -77,21 +84,52 @@ ${content.slice(0, 15000)}...`;
                         return;
                 }
 
-                setMessages(prev => [...prev, { role: 'user', text: userMessage }]);
+                setMessages(prev => [...prev, { role: 'user', text: userMessage }, { role: 'ai', text: '' }]);
 
                 try {
-                    if (window.eduAPI) {
-                        const response = await window.eduAPI.aiChat({
-                            messages: [{ role: 'user', text: prompt }],
-                            context: { title, content },
-                            provider
-                        });
-                        setMessages(prev => [...prev, { role: 'ai', text: response }]);
+                    if (window.eduAPI?.aiChatStream) {
+                        window.eduAPI.aiChatStream(
+                            { messages: [{ role: 'user', text: prompt }], context: { title, content }, provider },
+                            (chunk) => {
+                                setMessages(prev => {
+                                    const copy = [...prev];
+                                    const last = copy[copy.length - 1];
+                                    if (last?.role === 'ai') {
+                                        copy[copy.length - 1] = { ...last, text: last.text + chunk };
+                                    }
+                                    return copy;
+                                });
+                            },
+                            () => {
+                                processingAction.current = null;
+                                onActionComplete?.();
+                            },
+                            (err) => {
+                                setMessages(prev => {
+                                    const copy = [...prev];
+                                    const last = copy[copy.length - 1];
+                                    if (last?.role === 'ai') {
+                                        copy[copy.length - 1] = { ...last, text: last.text + `\n(Error: ${err})` };
+                                    }
+                                    return copy;
+                                });
+                                processingAction.current = null;
+                                onActionComplete?.();
+                            }
+                        );
                     }
                 } catch (e) {
                     console.error(`${pendingAction.type} failed`, e);
-                    setMessages(prev => [...prev, { role: 'ai', text: `Sorry, I couldn't complete the ${pendingAction.type} request right now.` }]);
-                } finally {
+                    setMessages(prev => {
+                        // Fix up the empty AI message if it exists, or add one
+                        const copy = [...prev];
+                        const last = copy[copy.length - 1];
+                        if (last?.role === 'ai' && !last.text) {
+                            copy[copy.length - 1] = { ...last, text: "Sorry, I couldn't complete the request." };
+                            return copy;
+                        }
+                        return [...prev, { role: 'ai', text: "Sorry, I couldn't complete the request." }];
+                    });
                     processingAction.current = null;
                     onActionComplete?.();
                 }
@@ -133,10 +171,35 @@ ${content.slice(0, 15000)}...`;
             if (data) context = { title: data.title, content: data.content };
         }
 
-        if (window.eduAPI) {
+        if (window.eduAPI?.aiChatStream) {
             try {
-                const response = await window.eduAPI.aiChat({ messages: newMessages, context, provider });
-                setMessages(prev => [...prev, { role: 'ai', text: response }]);
+                // Add empty AI message
+                setMessages(prev => [...prev, { role: 'ai', text: '' }]);
+
+                window.eduAPI.aiChatStream(
+                    { messages: newMessages, context, provider },
+                    (chunk) => {
+                        setMessages(prev => {
+                            const copy = [...prev];
+                            const last = copy[copy.length - 1];
+                            if (last?.role === 'ai') {
+                                copy[copy.length - 1] = { ...last, text: last.text + chunk };
+                            }
+                            return copy;
+                        });
+                    },
+                    () => { },
+                    (err) => {
+                        setMessages(prev => {
+                            const copy = [...prev];
+                            const last = copy[copy.length - 1];
+                            if (last?.role === 'ai') {
+                                copy[copy.length - 1] = { ...last, text: last.text + `\n(Error: ${err})` };
+                            }
+                            return copy;
+                        });
+                    }
+                );
             } catch (error) {
                 console.error("AI chat failed:", error);
                 setMessages(prev => [...prev, { role: 'ai', text: "Error connecting to AI." }]);
@@ -160,53 +223,84 @@ ${content.slice(0, 15000)}...`;
     const providerLabel = provider === 'openai' ? 'OpenAI (GPT-4o Mini)' : 'Gemini (2.5 Flash)';
 
     return (
-        <div className="flex flex-col h-full">
-            <div className="p-4 border-b border-white/10 flex items-center justify-between glass-ultra">
-                <h2 className="text-lg font-semibold text-foreground">AI Tutor</h2>
-                <div className="flex gap-2 mt-3 flex-wrap">
-                    <span className="text-[11px] font-bold tracking-wide uppercase glass-medium text-blue-600 px-3 py-1 rounded-full border border-blue-500/20 transition-smooth">
+        <div className="flex h-full flex-col">
+            <div className="shrink-0 border-b border-line px-4 py-3">
+                <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                        <span className="flex h-6 w-6 items-center justify-center rounded bg-fg text-canvas">
+                            <Icon name="sparkles" className="h-3.5 w-3.5" strokeWidth={1.8} />
+                        </span>
+                        <h2 className="text-[14px] font-medium text-fg">AI Tutor</h2>
+                    </div>
+                    <span className="flex items-center gap-1.5 rounded-sm border border-line px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.08em] text-fg-2">
+                        <span className="h-1.5 w-1.5 rounded-full bg-fg" />
                         {providerLabel}
                     </span>
-                    <button onClick={handleAnalyze} className="text-[11px] font-bold tracking-wide uppercase glass-medium text-green-600 hover:shadow-md px-3 py-1 rounded-full border border-green-500/20 cursor-pointer transition-spring liquid-hover">
-                        Read Page
+                </div>
+                <div className="mt-3 flex gap-2">
+                    <button
+                        type="button"
+                        onClick={handleAnalyze}
+                        className="flex h-8 items-center gap-1.5 rounded border border-line px-2.5 text-[12px] text-fg transition-colors hover:border-line-active hover:bg-card"
+                    >
+                        <Icon name="book-open" className="h-3.5 w-3.5" /> Read page
                     </button>
-                    <button onClick={handleToggleProvider} className="text-[11px] font-bold tracking-wide uppercase glass-ultra text-foreground/60 px-3 py-1 rounded-full border border-white/10 cursor-pointer transition-spring liquid-hover">
-                        Switch Model
+                    <button
+                        type="button"
+                        onClick={handleToggleProvider}
+                        className="flex h-8 items-center gap-1.5 rounded px-2.5 text-[12px] text-fg-2 transition-colors hover:bg-raised hover:text-fg"
+                    >
+                        <Icon name="refresh" className="h-3.5 w-3.5" /> Switch model
                     </button>
                 </div>
             </div>
 
-            <div className="flex-1 p-5 overflow-y-auto space-y-6">
+            <div ref={threadRef} className="min-h-0 flex-1 space-y-5 overflow-y-auto px-4 py-5" aria-live="polite">
                 {messages.map((msg, i) => (
-                    <div key={i} className={`flex flex-col gap-2 ${msg.role === 'ai' ? 'items-start' : 'items-end'}`}>
-                        <div className={`${msg.role === 'ai'
-                            ? 'glass-panel rounded-tl-none spring-enter'
-                            : 'bg-blue-500 text-white rounded-tr-none glow-hover'} 
-                            p-4 rounded-3xl max-w-[90%] text-sm leading-relaxed transition-spring`}>
-                            {msg.role === 'ai' ? <MarkdownRenderer content={msg.text} /> : msg.text}
-                        </div>
-                        <span className={`text-xs font-medium text-foreground/40 ${msg.role === 'ai' ? 'ml-2' : 'mr-2'}`}>
+                    <div key={i} className={`flex flex-col gap-1.5 ${msg.role === 'ai' ? 'items-start' : 'items-end'}`}>
+                        <span className="kicker flex items-center gap-1.5">
+                            {msg.role === 'ai' && <Icon name="sparkles" className="h-3 w-3" />}
                             {msg.role === 'ai' ? 'AI Tutor' : 'You'}
                         </span>
+                        {msg.role === 'ai' ? (
+                            <div className="w-full rounded border border-line bg-card px-3.5 py-3 text-[13.5px] leading-relaxed">
+                                {msg.text ? (
+                                    <MarkdownRenderer content={msg.text} />
+                                ) : (
+                                    <span className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.1em] text-fg-3">
+                                        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-fg-2" /> Thinking…
+                                    </span>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="max-w-[88%] rounded border border-line bg-raised px-3.5 py-2.5 text-[13.5px] leading-relaxed text-fg">
+                                {msg.text}
+                            </div>
+                        )}
                     </div>
                 ))}
             </div>
 
-            <div className="p-4 mt-auto">
-                <div className="relative group">
+            <div className="shrink-0 border-t border-line p-3">
+                <div className="flex items-center gap-2 rounded border border-line bg-canvas py-1 pl-3 pr-1 transition-colors focus-within:border-fg-2">
                     <input
                         id="ai-input"
                         onKeyDown={handleKeyDown}
-                        className="w-full glass-ultra border-2 border-white/80 backdrop-blur-md rounded-full py-4 pl-6 pr-12 text-sm font-medium shadow-md transition-smooth duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/40 focus:shadow-lg placeholder:text-foreground/50"
-                        placeholder="Ask a question..."
+                        aria-label="Ask the AI tutor"
+                        className="h-8 min-w-0 flex-1 bg-transparent text-[13.5px] text-fg outline-none placeholder:text-fg-4 focus-visible:outline-none"
+                        placeholder="Ask about this page..."
                     />
-                    <button onClick={handleSendMessage} className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-blue-500 rounded-full text-white shadow-lg hover:scale-105 active:scale-95 transition-spring glow-hover">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
+                    <button
+                        type="button"
+                        onClick={handleSendMessage}
+                        aria-label="Send question"
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-fg text-canvas transition-colors hover:bg-line-strong"
+                    >
+                        <Icon name="send" className="h-4 w-4" strokeWidth={2} />
                     </button>
                 </div>
+                <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.1em] text-fg-4">Enter to send · grounded in the active tab</p>
             </div>
-        </div >
+        </div>
     );
 }

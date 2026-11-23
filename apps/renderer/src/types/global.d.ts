@@ -12,6 +12,12 @@ export interface IElectronAPI {
     refresh: (tabId: string) => void;
     extractText: (tabId: string) => Promise<{ title: string; content: string; selection?: boolean; error?: string }>;
     aiChat: (payload: { messages: Array<{ role: string, text: string }>, context?: { title: string, content: string }, provider?: string }) => Promise<string>;
+    aiChatStream: (
+        payload: { messages: Array<{ role: string, text: string }>, context?: { title: string, content: string }, provider?: string },
+        onChunk: (chunk: string) => void,
+        onComplete: () => void,
+        onError: (err: string) => void
+    ) => () => void;
 
     // History
     getHistory: () => Promise<Array<{ id: string; title: string; url: string; timestamp: number; favicon?: string }>>;

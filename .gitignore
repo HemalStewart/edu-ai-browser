@@ -33,3 +33,12 @@ pnpm-debug.log*
 
 # Agent Artifacts
 .gemini
+node_modules/
+.next/
+.turbo/
+.env.*
+!.env.example
+__pycache__/
+*.log
+venv/
+.venv/

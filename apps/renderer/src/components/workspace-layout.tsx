@@ -1,6 +1,10 @@
 import React from "react";
+import { AlphaMindHeader } from "@/components/alpha-mind-header";
 
 interface WorkspaceLayoutProps {
+    topBar: React.ReactNode;
+    rail: React.ReactNode;
+    statusBar?: React.ReactNode;
     leftPanel: React.ReactNode;
     rightPanel: React.ReactNode;
     children: React.ReactNode;
@@ -8,7 +12,15 @@ interface WorkspaceLayoutProps {
     hideRightPanel?: boolean;
 }
 
+/**
+ * Tripartite studio workspace: icon rail · library (sources) · browser canvas · AI tutor.
+ * Columns are split by 1px hairlines instead of gutters. Side panels stay mounted while hidden
+ * so the tutor keeps its conversation when it is toggled.
+ */
 export function WorkspaceLayout({
+    topBar,
+    rail,
+    statusBar,
     leftPanel,
     rightPanel,
     children,
@@ -16,31 +28,33 @@ export function WorkspaceLayout({
     hideRightPanel = false,
 }: WorkspaceLayoutProps) {
     return (
-        <div className="flex h-screen w-screen overflow-hidden">
-            {/* Left Panel: Library */}
-            <aside
-                className={`flex-shrink-0 overflow-hidden flex flex-col transition-spring ${hideLeftPanel
-                        ? "w-0 opacity-0 pointer-events-none scale-95"
-                        : "w-[360px] glass-panel rounded-3xl liquid-hover spring-enter"
-                    }`}
-            >
-                {!hideLeftPanel && leftPanel}
-            </aside>
+        <div className="flex h-screen w-screen flex-col overflow-hidden bg-canvas text-fg">
+            {topBar}
+            <AlphaMindHeader />
 
-            {/* Center Panel: Reader/Browser */}
-            <main className="flex-1 h-full min-w-0 flex flex-col relative overflow-hidden transition-smooth">
-                {children}
-            </main>
+            <div className="flex min-h-0 flex-1 overflow-hidden">
+                {rail}
 
-            {/* Right Panel: AI Tutor */}
-            <aside
-                className={`flex-shrink-0 overflow-hidden flex flex-col transition-spring ${hideRightPanel
-                        ? "w-0 opacity-0 pointer-events-none scale-95"
-                        : "w-[420px] glass-panel rounded-3xl liquid-hover spring-enter"
-                    }`}
-            >
-                {!hideRightPanel && rightPanel}
-            </aside>
+                <aside
+                    aria-label="Library"
+                    hidden={hideLeftPanel}
+                    className="flex w-[300px] shrink-0 flex-col overflow-hidden border-r border-line bg-pane xl:w-[320px]"
+                >
+                    {leftPanel}
+                </aside>
+
+                <main className="relative flex h-full min-w-0 flex-1 flex-col overflow-hidden">{children}</main>
+
+                <aside
+                    aria-label="AI Tutor"
+                    hidden={hideRightPanel}
+                    className="flex w-[360px] shrink-0 flex-col overflow-hidden border-l border-line bg-pane xl:w-[380px]"
+                >
+                    {rightPanel}
+                </aside>
+            </div>
+
+            {statusBar}
         </div>
     );
 }
