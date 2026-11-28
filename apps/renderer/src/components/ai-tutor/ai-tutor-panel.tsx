@@ -171,6 +171,12 @@ ${content.slice(0, 15000)}...`;
             if (data) context = { title: data.title, content: data.content };
         }
 
+        if (!window.eduAPI?.aiChatStream) {
+            // Opened in a plain browser tab (no Electron bridge): say so instead of leaving the question unanswered.
+            setMessages(prev => [...prev, { role: 'ai', text: "The AI Tutor runs inside the Quantum Mind desktop app, where it can read your open tabs. Here in the browser, ask the Quantum assistant on the right." }]);
+            return;
+        }
+
         if (window.eduAPI?.aiChatStream) {
             try {
                 // Add empty AI message
@@ -224,14 +230,10 @@ ${content.slice(0, 15000)}...`;
 
     return (
         <div className="flex h-full flex-col">
+            {/* The Quantum sections panel supplies the "AI Tutor" title bar. */}
             <div className="shrink-0 border-b border-line px-4 py-3">
                 <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                        <span className="flex h-6 w-6 items-center justify-center rounded bg-fg text-canvas">
-                            <Icon name="sparkles" className="h-3.5 w-3.5" strokeWidth={1.8} />
-                        </span>
-                        <h2 className="text-[14px] font-medium text-fg">AI Tutor</h2>
-                    </div>
+                    <p className="kicker">Model</p>
                     <span className="flex items-center gap-1.5 rounded-sm border border-line px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.08em] text-fg-2">
                         <span className="h-1.5 w-1.5 rounded-full bg-fg" />
                         {providerLabel}
@@ -294,7 +296,7 @@ ${content.slice(0, 15000)}...`;
                         type="button"
                         onClick={handleSendMessage}
                         aria-label="Send question"
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-fg text-canvas transition-colors hover:bg-line-strong"
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-accent text-accent-fg transition-colors hover:bg-accent-hover"
                     >
                         <Icon name="send" className="h-4 w-4" strokeWidth={2} />
                     </button>

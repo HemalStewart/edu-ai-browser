@@ -110,12 +110,10 @@ export function LibraryPanel({
 
     return (
         <div className="flex h-full flex-col">
-            <div className="flex h-11 shrink-0 items-center justify-between border-b border-line px-4">
-                <p className="text-[14px] font-medium text-fg">Library</p>
-                <span className="font-mono text-[10.5px] uppercase tracking-[0.1em] text-fg-3">
-                    {recentSessions.length} recent · {discoverCards.length} sources
-                </span>
-            </div>
+            {/* The Quantum sections panel supplies the "Library" title bar; this is a summary line under it. */}
+            <p className="shrink-0 border-b border-line-muted px-4 py-2 font-mono text-[10.5px] uppercase tracking-[0.1em] text-fg-3">
+                {recentSessions.length} recent · {discoverCards.length} sources
+            </p>
 
             <div className="min-h-0 flex-1 overflow-y-auto">
                 <Section title="Now browsing">
@@ -231,7 +229,7 @@ export function LibraryPanel({
                                 </div>
                                 <span
                                     className={`shrink-0 rounded-sm px-1.5 py-px font-mono text-[10px] uppercase tracking-[0.08em] ${
-                                        feature.status === "Ready" ? "bg-fg text-canvas" : "border border-line-active text-fg-2"
+                                        feature.status === "Ready" ? "bg-accent text-accent-fg" : "border border-line-active text-fg-2"
                                     }`}
                                 >
                                     {feature.status}

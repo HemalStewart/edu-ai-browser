@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { WorkspaceLayout } from "@/components/workspace-layout";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { AlphaMindHeader } from "@/components/alpha-mind-header";
 import { LibraryPanel } from "@/components/library/library-panel";
 import { AITutorPanel, PendingAiAction } from "@/components/ai-tutor/ai-tutor-panel";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
@@ -10,6 +10,8 @@ import { BookmarksView } from "@/components/views/bookmarks-view";
 import { SettingsView } from "@/components/views/settings-view";
 import { OmniboxHome } from "@/components/omnibox-home";
 import { Icon, type IconName } from "@/components/icons";
+import { QuantumShell, type NavItem } from "../quantum/ui";
+import { ProfileButton, useQuantumId } from "../quantum/id";
 import type {
   ComplianceFeature,
   DiscoveryCard,
@@ -167,44 +169,25 @@ function StatusDot({ status }: { status: string }) {
   return <span aria-hidden className="h-1.5 w-1.5 shrink-0 rounded-full bg-fg" />;
 }
 
-function RailButton({
+/** `className` carries the display utility ("flex" by default) so narrow canvases can hide a control. */
+function ChromeIconButton({
   icon,
   label,
-  active,
-  pressed,
   onClick,
+  className = "flex",
 }: {
   icon: IconName;
   label: string;
-  active: boolean;
-  pressed?: boolean;
   onClick: () => void;
+  className?: string;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
       aria-label={label}
-      aria-pressed={pressed}
       title={label}
-      className={`relative flex h-10 w-10 items-center justify-center rounded transition-colors ${
-        active ? "bg-raised text-fg" : "text-fg-3 hover:bg-raised hover:text-fg"
-      }`}
-    >
-      {active && <span aria-hidden className="absolute -left-2 bottom-2 top-2 w-0.5 bg-fg" />}
-      <Icon name={icon} className="h-[18px] w-[18px]" />
-    </button>
-  );
-}
-
-function ChromeIconButton({ icon, label, onClick }: { icon: IconName; label: string; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={label}
-      title={label}
-      className="flex h-9 w-9 shrink-0 items-center justify-center rounded border border-line text-fg-2 transition-colors hover:border-line-active hover:bg-card hover:text-fg"
+      className={`${className} h-9 w-9 shrink-0 items-center justify-center rounded border border-line text-fg-2 transition-colors hover:border-line-active hover:bg-card hover:text-fg`}
     >
       <Icon name={icon} className="h-4 w-4" />
     </button>
@@ -216,29 +199,69 @@ function ChromeToggle({
   label,
   active,
   onClick,
+  className = "flex",
 }: {
   icon: IconName;
   label: string;
   active: boolean;
   onClick: () => void;
+  className?: string;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
       aria-pressed={active}
+      aria-label={label}
       title={label}
-      className={`flex h-9 shrink-0 items-center gap-2 rounded border px-3 text-[12.5px] transition-colors ${
+      className={`${className} h-9 shrink-0 items-center gap-2 rounded border px-3 text-[12.5px] transition-colors ${
         active
-          ? "border-fg bg-fg font-medium text-canvas hover:bg-line-strong"
+          ? "border-accent bg-accent font-medium text-accent-fg hover:bg-accent-hover"
           : "border-line text-fg-2 hover:border-line-active hover:bg-card hover:text-fg"
       }`}
     >
       <Icon name={icon} className="h-4 w-4" />
-      <span className="hidden xl:inline">{label}</span>
+      <span className="hidden @5xl:inline">{label}</span>
     </button>
   );
 }
+
+/** Side panel shown in the Quantum sections column (one at a time). */
+type StudyPanel = "library" | "tutor";
+
+/**
+ * Quantum Mind's rail. Pages are browser views (a tab's URL or reader mode); "library" and "tutor"
+ * toggle the study panel in the Quantum sections column (like an activity bar).
+ * id "settings" pins to the bottom of the rail.
+ */
+const NAV: NavItem[] = [
+  { id: "newtab", label: "New tab", icon: "compass" },
+  { id: "reader", label: "Reader", icon: "book-open" },
+  { id: "library", label: "Library", icon: "layers" },
+  { id: "tutor", label: "Tutor", icon: "graduation" },
+  { id: "history", label: "History", icon: "clock" },
+  { id: "bookmarks", label: "Book\u00admarks", icon: "bookmark" }, // soft hyphen: wraps instead of truncating in the rail
+  { id: "settings", label: "Settings", icon: "settings" },
+];
+
+const INTERNAL_PAGES: Record<string, { id: string; label: string }> = {
+  "edu://history": { id: "history", label: "History" },
+  "edu://bookmarks": { id: "bookmarks", label: "Bookmarks" },
+  "edu://settings": { id: "settings", label: "Settings" },
+};
+
+/** Starter prompts for the Quantum assistant, per view. */
+const SUGGESTIONS: Record<string, string[]> = {
+  newtab: ["How do I search or open a page?", "What do the learning tools do?", "How does Reader mode help me study?"],
+  page: ["Summarise what this page covers", "How do I make flashcards from this page?", "How do I bookmark this page?"],
+  reader: ["Explain the passage I selected", "Quiz me on this article", "What are the key points here?"],
+  history: ["How do I reopen a page from history?", "How do I clear my history?"],
+  bookmarks: ["How do I add a bookmark?", "How do I remove a bookmark?"],
+  settings: ["How do I change the default search engine?", "How do I switch to the light theme?"],
+};
+
+/** Selector for kit overlays (menus, drawers, gates) that must not be covered by the native page view. */
+const KIT_OVERLAYS = ".q-menu, .q-scrim, .q-offline, .qid-gate-card";
 
 export default function Home() {
   const browserContainerRef = useRef<HTMLDivElement>(null);
@@ -251,8 +274,40 @@ export default function Home() {
   const [aiSyncEnabled, setAiSyncEnabled] = useState(true);
   const [recentSessions, setRecentSessions] = useState<RecentSession[]>(DEFAULT_RECENT_SESSIONS);
   const sessionCounterRef = useRef(0);
-  const [libraryCollapsed, setLibraryCollapsed] = useState(true);
-  const [tutorCollapsed, setTutorCollapsed] = useState(true);
+  const [panel, setPanel] = useState<StudyPanel>("library");
+  const [sectionsOpen, setSectionsOpen] = useState(false);
+  const [overlayOpen, setOverlayOpen] = useState(false);
+  const { signIn } = useQuantumId();
+
+  /*
+   * The study panel (Library / AI Tutor) lives in the Quantum sections column. QuantumShell owns that
+   * column's open state and only exposes it through its top-bar toggle, so we read the toggle's
+   * aria-expanded and press it to open / close the panel from the rail, the quick tools and "Focus".
+   * (Workaround until the kit offers a controlled `sectionsOpen` prop — reported to the kit owner.)
+   */
+  const sectionsToggle = () =>
+    document.querySelector<HTMLButtonElement>('.q-topbar button[aria-controls$="-sections"]');
+
+  const showSections = useCallback((open: boolean) => {
+    // Deferred so the shell's own rail handling (it closes the narrow-screen drawer) runs first.
+    window.setTimeout(() => {
+      const toggle = sectionsToggle();
+      if (toggle && (toggle.getAttribute("aria-expanded") === "true") !== open) toggle.click();
+    }, 0);
+  }, []);
+
+  useEffect(() => {
+    const toggle = sectionsToggle();
+    if (!toggle) return;
+    const sync = () => setSectionsOpen(toggle.getAttribute("aria-expanded") === "true");
+    const observer = new MutationObserver(sync);
+    observer.observe(toggle, { attributes: true, attributeFilter: ["aria-expanded"] });
+    // Like the original browser, the page starts full width: the study panel opens on demand.
+    showSections(false);
+    sync();
+    return () => observer.disconnect();
+  }, [showSections]);
+
   const [toolInFlight, setToolInFlight] = useState<string | null>(null);
   const [toolResult, setToolResult] = useState<{ title: string; detail: string } | null>(null);
   const [readerMode, setReaderMode] = useState(false);
@@ -264,6 +319,7 @@ export default function Home() {
   const [readerExplainState, setReaderExplainState] = useState<ReaderExplainState>({ status: "idle" });
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [pendingAiAction, setPendingAiAction] = useState<PendingAiAction | null>(null);
+  const clearPendingAction = useCallback(() => setPendingAiAction(null), []);
   const [bookmarkedUrl, setBookmarkedUrl] = useState<string | null>(null);
 
   const nextSessionId = () => {
@@ -506,6 +562,28 @@ export default function Home() {
     return () => window.removeEventListener("keydown", handleShortcut);
   }, []);
 
+  // The page itself is a native Electron view drawn above this renderer, so any Quantum overlay
+  // (app switcher, profile menu, narrow-screen drawers, offline / sign-in gates) would be hidden under it.
+  // Track whether one is open and park the native view while it is.
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.eduAPI) return;
+    const check = () => setOverlayOpen(!!document.querySelector(KIT_OVERLAYS));
+    const observer = new MutationObserver(check);
+    observer.observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ["hidden", "aria-expanded"] });
+    check();
+    return () => observer.disconnect();
+  }, []);
+
+  // Leaving the renderer (e.g. Quantum ID sign-in on the hub) must not leave the native page view on top.
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.eduAPI) return;
+    const park = () => {
+      if (activeTabId) window.eduAPI.resizeBrowserView(activeTabId, { x: 0, y: 0, width: 0, height: 0 });
+    };
+    window.addEventListener("pagehide", park);
+    return () => window.removeEventListener("pagehide", park);
+  }, [activeTabId]);
+
   // Handle BrowserView resizing and updates
   useEffect(() => {
     if (typeof window === "undefined" || !window.eduAPI) return;
@@ -522,7 +600,7 @@ export default function Home() {
       });
     };
 
-    if (readerMode || isNewTab || isInternalPage) {
+    if (readerMode || isNewTab || isInternalPage || overlayOpen) {
       if (activeTabId) window.eduAPI.resizeBrowserView(activeTabId, { x: 0, y: 0, width: 0, height: 0 });
       return;
     }
@@ -546,7 +624,7 @@ export default function Home() {
         window.eduAPI.resizeBrowserView(activeTabId, { x: 0, y: 0, width: 0, height: 0 });
       }
     };
-  }, [libraryCollapsed, tutorCollapsed, readerMode, activeTabId, isReady, isNewTab, isInternalPage]);
+  }, [sectionsOpen, readerMode, activeTabId, isReady, isNewTab, isInternalPage, overlayOpen]);
 
   const navigate = (targetOverride?: string) => {
     const raw = (targetOverride ?? urlValue).trim();
@@ -594,8 +672,7 @@ export default function Home() {
       return [nextEntry, ...filtered].slice(0, 4);
     });
 
-    setLibraryCollapsed(true);
-    setTutorCollapsed(true);
+    showSections(false);
 
     if (typeof window !== "undefined" && window.eduAPI) {
       // Only load strict web URLs in the BrowserView.
@@ -638,13 +715,13 @@ export default function Home() {
     navigate(url);
   };
 
+  /** Focus on the page: hide the study panel; press again to bring the library back. */
   const handleFocusToggle = () => {
-    if (libraryCollapsed && tutorCollapsed) {
-      setLibraryCollapsed(false);
-      setTutorCollapsed(false);
+    if (sectionsOpen) {
+      showSections(false);
     } else {
-      setLibraryCollapsed(true);
-      setTutorCollapsed(true);
+      setPanel("library");
+      showSections(true);
     }
   };
 
@@ -730,7 +807,8 @@ export default function Home() {
         type: tool.id as PendingAiAction["type"],
         context: { title: anchorTitle, content: context.content }
       });
-      setTutorCollapsed(false);
+      setPanel("tutor");
+      showSections(true);
     }
   };
 
@@ -808,22 +886,14 @@ export default function Home() {
     selectionText.length > 200 ? `${selectionText.slice(0, 200)}…` : selectionText;
 
   const isBookmarked = bookmarkedUrl === activeTab.url;
-  const workspaceHidden = libraryCollapsed && tutorCollapsed;
+  const workspaceHidden = !sectionsOpen;
   const activeLocation = isNewTab ? "omnibox" : activeTab.url.replace(/^https?:\/\//, "");
 
-  const topBar = (
-    <header className="shrink-0 border-b border-line bg-canvas">
-      {/* Brand + tab strip */}
+  // Browser toolbar: the tab strip and the address row sit at the top of the Quantum main canvas.
+  const browserBar = (
+    <div className="shrink-0 border-b border-line bg-canvas">
+      {/* Tab strip */}
       <div className="flex h-11 items-center gap-3 px-3">
-        <div className="flex shrink-0 items-center gap-2 pr-1">
-          <span className="flex h-6 w-6 items-center justify-center rounded bg-fg text-canvas">
-            <Icon name="atom" className="h-4 w-4" strokeWidth={1.7} />
-          </span>
-          <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-fg">Quantum Mind</span>
-          <span className="hidden font-mono text-[11px] uppercase tracking-[0.14em] text-fg-4 md:inline">/</span>
-          <span className="hidden font-mono text-[11px] uppercase tracking-[0.14em] text-fg-3 md:inline">Study</span>
-        </div>
-
         <div role="tablist" aria-label="Open tabs" className="no-scrollbar flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">
           {tabs.map((tab) => {
             const active = activeTabId === tab.id;
@@ -872,7 +942,7 @@ export default function Home() {
           </button>
         </div>
 
-        <div className="hidden shrink-0 items-center gap-2 font-mono text-[10.5px] uppercase tracking-[0.1em] lg:flex">
+        <div className="hidden shrink-0 items-center gap-2 font-mono text-[10.5px] uppercase tracking-[0.1em] @3xl:flex">
           <span className="flex h-6 items-center gap-1.5 rounded-sm border border-line bg-pane px-2 text-fg-2">
             <StatusDot status={activeTab.status} />
             {activeTab.status}
@@ -886,8 +956,8 @@ export default function Home() {
       {/* Navigation + address omnibox */}
       <div className="flex h-12 items-center gap-2 border-t border-line-muted bg-pane px-3">
         <ChromeIconButton icon="arrow-left" label="Back" onClick={() => handleBrowserAction("back")} />
-        <ChromeIconButton icon="arrow-right" label="Forward" onClick={() => handleBrowserAction("forward")} />
-        <ChromeIconButton icon="refresh" label="Refresh" onClick={() => handleBrowserAction("refresh")} />
+        <ChromeIconButton icon="arrow-right" label="Forward" className="hidden @md:flex" onClick={() => handleBrowserAction("forward")} />
+        <ChromeIconButton icon="refresh" label="Refresh" className="hidden @md:flex" onClick={() => handleBrowserAction("refresh")} />
 
         <div className="flex h-9 min-w-0 flex-1 items-center gap-2.5 rounded border border-line bg-canvas px-3 transition-colors focus-within:border-fg-2">
           <Icon name={isNewTab ? "search" : "globe"} className="h-4 w-4 shrink-0 text-fg-3" />
@@ -914,60 +984,28 @@ export default function Home() {
               <Icon name="bookmark" className={`h-3.5 w-3.5 ${isBookmarked ? "fill-current" : ""}`} />
             </button>
           )}
-          <kbd className="hidden h-5 shrink-0 items-center rounded-sm border border-line px-1.5 font-mono text-[10px] text-fg-3 md:flex">⌘K</kbd>
+          <kbd className="hidden h-5 shrink-0 items-center rounded-sm border border-line px-1.5 font-mono text-[10px] text-fg-3 @xl:flex">⌘K</kbd>
         </div>
 
         <button
           type="button"
           onClick={() => navigate()}
-          className="flex h-9 shrink-0 items-center gap-2 rounded bg-fg px-3.5 font-mono text-[11.5px] font-semibold uppercase tracking-[0.08em] text-canvas transition-colors hover:bg-line-strong active:bg-zinc-300"
+          className="hidden h-9 shrink-0 items-center gap-2 rounded bg-accent px-3.5 font-mono text-[11.5px] font-semibold uppercase tracking-[0.08em] text-accent-fg transition-colors hover:bg-accent-hover active:bg-accent-active @md:flex"
         >
           Go <Icon name="return" className="h-3.5 w-3.5" strokeWidth={2} />
         </button>
 
-        <span aria-hidden className="mx-1 h-5 w-px bg-line" />
+        <span aria-hidden className="mx-1 hidden h-5 w-px bg-line @md:block" />
         <ChromeToggle icon="book-open" label={readerMode ? "Close Reader" : "Reader Mode"} active={readerMode} onClick={handleReaderToggle} />
         <ChromeToggle
           icon="focus"
-          label={workspaceHidden ? "Show workspace" : "Focus on page"}
+          label={workspaceHidden ? "Show library" : "Focus on page"}
           active={false}
+          className="hidden @md:flex"
           onClick={handleFocusToggle}
         />
       </div>
-    </header>
-  );
-
-  const rail = (
-    <nav aria-label="Workspace" className="flex w-14 shrink-0 flex-col items-center gap-1 border-r border-line bg-pane px-2 py-3">
-      <RailButton
-        icon="panel-left"
-        label={libraryCollapsed ? "Show library" : "Hide library"}
-        active={!libraryCollapsed}
-        pressed={!libraryCollapsed}
-        onClick={() => setLibraryCollapsed((prev) => !prev)}
-      />
-      <RailButton
-        icon="sparkles"
-        label={tutorCollapsed ? "Show AI tutor" : "Hide AI tutor"}
-        active={!tutorCollapsed}
-        pressed={!tutorCollapsed}
-        onClick={() => setTutorCollapsed((prev) => !prev)}
-      />
-      <RailButton
-        icon="book-open"
-        label={readerMode ? "Close reader mode" : "Reader mode"}
-        active={readerMode}
-        pressed={readerMode}
-        onClick={handleReaderToggle}
-      />
-      <span aria-hidden className="my-2 h-px w-6 bg-line" />
-      <RailButton icon="compass" label="New tab (omnibox)" active={isNewTab && !readerMode} onClick={createNewTab} />
-      <RailButton icon="clock" label="History" active={activeTab.url === "edu://history"} onClick={() => navigate("edu://history")} />
-      <RailButton icon="bookmark" label="Bookmarks" active={activeTab.url === "edu://bookmarks"} onClick={() => navigate("edu://bookmarks")} />
-      <div className="mt-auto">
-        <RailButton icon="settings" label="Settings" active={activeTab.url === "edu://settings"} onClick={() => navigate("edu://settings")} />
-      </div>
-    </nav>
+    </div>
   );
 
   const statusBar = (
@@ -979,25 +1017,67 @@ export default function Home() {
         <span className="min-w-0 truncate">
           Active: <span className="normal-case tracking-normal text-fg-2">{activeLocation}</span>
         </span>
-        <span className="hidden md:inline">Search: {engineLabel}</span>
+        <span className="hidden @xl:inline">Search: {engineLabel}</span>
       </div>
-      <div className="hidden shrink-0 items-center gap-4 lg:flex">
+      <div className="hidden shrink-0 items-center gap-4 @3xl:flex">
         <span>Reader: {readerMode ? "On" : "Off"}</span>
         <span>⌘K omnibox</span>
-        <span className="flex items-center gap-1.5">
-          <span aria-hidden className="h-2 w-2 rounded-full border border-fg-3 bg-[linear-gradient(90deg,#71717a_50%,transparent_50%)]" />
-          OLED monochrome
-        </span>
       </div>
     </footer>
   );
 
-  return (
-    <WorkspaceLayout
-      topBar={topBar}
-      rail={rail}
-      statusBar={statusBar}
-      leftPanel={
+  // Which browser view is on screen (drives the rail highlight, breadcrumb and assistant prompts).
+  const internalPage = INTERNAL_PAGES[activeTab.url];
+  const viewId = readerMode ? "reader" : internalPage ? internalPage.id : isNewTab ? "newtab" : "page";
+  const breadcrumb = readerMode
+    ? ["Reader", readerContext?.title || activeTab.title]
+    : internalPage
+      ? [internalPage.label]
+      : isNewTab
+        ? ["New tab"]
+        : ["Browse", formatUrlLabel(activeTab.url)];
+  const activeNav = sectionsOpen ? panel : viewId === "page" ? undefined : viewId;
+
+  const handleRailNavigate = (id: string) => {
+    if (id === "library" || id === "tutor") {
+      if (sectionsOpen && panel === id) {
+        showSections(false);
+      } else {
+        setPanel(id);
+        showSections(true);
+      }
+      return;
+    }
+    if (id === "newtab") {
+      if (readerMode) void handleReaderToggle();
+      void createNewTab();
+    } else if (id === "reader") {
+      void handleReaderToggle();
+    } else {
+      const url = Object.keys(INTERNAL_PAGES).find((key) => INTERNAL_PAGES[key].id === id);
+      if (url) navigate(url);
+    }
+  };
+
+  // What the Quantum assistant sees: the current view, the tab, and (in reader mode) the text being read.
+  const getContext = () => {
+    const lines = [
+      `Quantum Mind › ${breadcrumb.join(" › ")}`,
+      `Open tabs: ${tabs.length}. Active tab: "${activeTab.title}" (${isNewTab ? "new tab / omnibox" : activeTab.url}).`,
+      `Reader mode: ${readerMode ? "on" : "off"}. Default search engine: ${engineLabel}.`,
+    ];
+    if (selectionText) lines.push(`Selected passage: "${selectionText.slice(0, 400)}"`);
+    if (readerMode && readerContext?.content) {
+      lines.push(`Page text (excerpt): ${readerContext.content.replace(/\s+/g, " ").slice(0, 800)}`);
+    } else if (!isNewTab && !isInternalPage && activeTab.peek) {
+      lines.push(`Page preview: ${activeTab.peek.replace(/\s+/g, " ").slice(0, 300)}`);
+    }
+    return lines.join("\n").slice(0, 1500);
+  };
+
+  const studyPanels = (
+    <>
+      <div hidden={panel !== "library"} className="h-full">
         <LibraryPanel
           session={activeTab} // Use active tab as session
           focusMode={focusMode}
@@ -1016,19 +1096,36 @@ export default function Home() {
           compliance={COMPLIANCE_FEATURES}
           discoverCards={DISCOVERY_DECK}
         />
-      }
-      rightPanel={
+      </div>
+      {/* Stays mounted while hidden so the tutor keeps its conversation. */}
+      <div hidden={panel !== "tutor"} className="h-full">
         <AITutorPanel
           onAnalyzePage={handleAnalyzePage}
           pendingAction={pendingAiAction}
-          onActionComplete={() => setPendingAiAction(null)}
+          onActionComplete={clearPendingAction}
         />
-      }
-      hideLeftPanel={libraryCollapsed}
-      hideRightPanel={tutorCollapsed}
+      </div>
+    </>
+  );
+
+  return (
+    <QuantumShell
+      tool="mind"
+      nav={NAV}
+      activeNav={activeNav}
+      onNavigate={handleRailNavigate}
+      sections={studyPanels}
+      sectionsTitle={panel === "tutor" ? "AI Tutor" : "Library"}
+      breadcrumb={breadcrumb}
+      assistant={{ getContext, suggestions: SUGGESTIONS[viewId], onSignIn: signIn }}
+      profile={<ProfileButton />}
     >
+      {/* Container-query root: browser chrome adapts to the canvas width, not the viewport. */}
+      <div className="@container flex min-h-0 flex-1 flex-col">
+        {browserBar}
+        <AlphaMindHeader />
       <div
-        className="relative z-0 flex h-full flex-col bg-canvas"
+        className="relative z-0 flex min-h-0 flex-1 flex-col bg-canvas"
         onDragEnter={handleDragEnter}
         onDragLeave={handleDragLeave}
         onDragOver={handleDragOver}
@@ -1188,6 +1285,8 @@ export default function Home() {
           )}
         </div>
       </div>
-    </WorkspaceLayout>
+      {statusBar}
+      </div>
+    </QuantumShell>
   );
 }

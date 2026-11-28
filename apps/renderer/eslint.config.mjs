@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Vendored Quantum kit (quantum-suite/scripts/sync-kit.mjs): linted in quantum-suite, never edited here.
+    "src/quantum/**",
   ]),
 ]);
 

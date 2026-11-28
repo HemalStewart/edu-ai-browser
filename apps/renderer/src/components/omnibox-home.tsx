@@ -102,7 +102,7 @@ export function OmniboxHome({
     return (
         <div className="@container min-h-full bg-canvas">
             {/* Context banner */}
-            <div className="border-b border-line-muted px-8 pb-5 pt-6">
+            <div className="border-b border-line-muted px-4 @xl:px-8 pb-5 pt-6">
                 <div className="mx-auto max-w-[1280px]">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                         <p className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.12em] text-fg-3">
@@ -129,7 +129,7 @@ export function OmniboxHome({
             </div>
 
             {/* Omnibox */}
-            <div className="border-b border-line-muted bg-pane px-8 py-5">
+            <div className="border-b border-line-muted bg-pane px-4 @xl:px-8 py-5">
                 <form
                     className="mx-auto max-w-[1280px] rounded-lg border border-line bg-canvas p-4 transition-colors focus-within:border-line-active"
                     onSubmit={(event) => {
@@ -154,7 +154,7 @@ export function OmniboxHome({
                         />
                         <button
                             type="submit"
-                            className="flex h-9 shrink-0 items-center gap-2 rounded bg-fg px-4 font-mono text-[11.5px] font-semibold uppercase tracking-[0.08em] text-canvas transition-colors hover:bg-line-strong active:bg-zinc-300"
+                            className="flex h-9 shrink-0 items-center gap-2 rounded bg-accent px-4 font-mono text-[11.5px] font-semibold uppercase tracking-[0.08em] text-accent-fg transition-colors hover:bg-accent-hover active:bg-accent-active"
                         >
                             Open <Icon name="return" className="h-3.5 w-3.5" strokeWidth={2} />
                         </button>
@@ -170,8 +170,9 @@ export function OmniboxHome({
                                     onClick={() => onOpen(engine.url)}
                                     className="flex h-7 items-center gap-2 rounded-sm border border-line bg-pane px-2.5 font-mono text-[11px] text-fg-2 transition-colors hover:border-line-active hover:text-fg"
                                 >
+                                    {/* Engine logos are drawn for a white backing, so it stays white in both themes. */}
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src={engine.icon} alt="" className="h-4 w-4 rounded-[2px] bg-white object-cover object-left p-px" />
+                                    <img src={engine.icon} alt="" className="h-4 w-4 rounded-[2px] bg-[#fff] object-cover object-left p-px" />
                                     {engine.name}
                                 </button>
                             ))}
@@ -182,7 +183,7 @@ export function OmniboxHome({
             </div>
 
             {/* Filters */}
-            <div className="px-8 py-3">
+            <div className="px-4 @xl:px-8 py-3">
                 <div className="mx-auto flex max-w-[1280px] flex-wrap items-center justify-between gap-3">
                     <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Filter sources">
                         {filters.map((item) => (
@@ -192,10 +193,10 @@ export function OmniboxHome({
                                 onClick={() => setFilter(item.id)}
                                 aria-pressed={filter === item.id}
                                 className={`flex h-7 items-center gap-1.5 rounded-sm px-3 font-mono text-[11px] uppercase tracking-[0.08em] transition-colors ${
-                                    filter === item.id ? "bg-fg font-semibold text-canvas" : "bg-pane text-fg-3 hover:bg-raised hover:text-fg"
+                                    filter === item.id ? "bg-accent font-semibold text-accent-fg" : "bg-pane text-fg-3 hover:bg-raised hover:text-fg"
                                 }`}
                             >
-                                {filter === item.id && <span className="h-1.5 w-1.5 rounded-full bg-canvas" />}
+                                {filter === item.id && <span className="h-1.5 w-1.5 rounded-full bg-accent-fg" />}
                                 {item.label} ({item.count})
                             </button>
                         ))}
@@ -207,7 +208,7 @@ export function OmniboxHome({
             </div>
 
             {/* Results + side column */}
-            <div className="px-8 pb-10">
+            <div className="px-4 @xl:px-8 pb-10">
                 <div className="mx-auto grid max-w-[1280px] gap-10 @5xl:grid-cols-[minmax(0,1fr)_340px]">
                     <ol className="min-w-0">
                         {results.map((result, index) => (
@@ -242,7 +243,7 @@ export function OmniboxHome({
                                     <button
                                         type="button"
                                         onClick={() => onOpen(result.url)}
-                                        className="flex h-7 items-center gap-1.5 rounded-sm border border-line-strong bg-fg px-2.5 font-mono text-[10.5px] font-semibold uppercase tracking-[0.08em] text-canvas transition-colors hover:bg-line-strong"
+                                        className="flex h-7 items-center gap-1.5 rounded-sm border border-accent bg-accent px-2.5 font-mono text-[10.5px] font-semibold uppercase tracking-[0.08em] text-accent-fg transition-colors hover:bg-accent-hover"
                                     >
                                         Open <Icon name="external" className="h-3 w-3" strokeWidth={2} />
                                     </button>

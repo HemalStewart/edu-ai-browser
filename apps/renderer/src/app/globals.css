@@ -1,41 +1,50 @@
 @import "tailwindcss";
+/* Quantum design kit (vendored by quantum-suite/scripts/sync-kit.mjs — do not edit src/quantum). */
+@import "../quantum/ui/quantum-ui.css";
+
+/* `dark:` variants follow the kit's <html data-theme="dark">. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 /*
- * Quantum Mind — "Obsidian Synthesis" OLED monochrome system.
- * Strictly achromatic: hierarchy comes from luminance stacking and 1px hairlines, never hue or shadow.
+ * Quantum Mind is the suite's reference design ("Obsidian"): the kit's dark theme IS this palette.
+ * Its token names stay, but every one now resolves to a kit token so the browser flips with the
+ * Quantum theme (dark / light). No per-theme blocks here — the kit owns both palettes.
  */
-@theme {
-  --color-canvas: #000000;
-  --color-pane: #09090b;
-  --color-card: #121215;
-  --color-raised: #18181b;
-  --color-hover: #202024;
-
-  --color-line: #27272a;
-  --color-line-muted: #1c1c1f;
-  --color-line-active: #52525b;
-  --color-line-strong: #e4e4e7;
-
-  --color-fg: #ffffff;
-  --color-fg-2: #a1a1aa;
-  --color-fg-3: #71717a;
-  --color-fg-4: #3f3f46;
-}
-
 @theme inline {
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  --color-canvas: var(--q-canvas);
+  --color-pane: var(--q-pane);
+  --color-card: var(--q-card);
+  --color-raised: var(--q-raised);
+  --color-hover: var(--q-hover);
+
+  --color-line: var(--q-line);
+  --color-line-muted: var(--q-line-muted);
+  --color-line-active: var(--q-line-active);
+
+  --color-fg: var(--q-fg);
+  --color-fg-2: var(--q-fg-2);
+  --color-fg-3: var(--q-fg-3);
+  --color-fg-4: var(--q-fg-4);
+
+  /* Primary (inverted) buttons: white on black in dark, black on light grey in light. */
+  --color-accent: var(--q-accent);
+  --color-accent-fg: var(--q-accent-fg);
+  --color-accent-hover: var(--q-accent-hover);
+  --color-accent-active: var(--q-accent-active);
+
+  --font-sans: var(--q-font-sans);
+  --font-mono: var(--q-font-mono);
 }
 
-/* Monospaced section label used across rails and panels */
+/* Monospaced section label used across panels */
 @utility kicker {
-  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-family: var(--q-font-mono);
   font-size: 10.5px;
   line-height: 14px;
   font-weight: 500;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--color-fg-3);
+  color: var(--q-fg-3);
 }
 
 @utility no-scrollbar {
@@ -47,20 +56,9 @@
 }
 
 @layer base {
-  html {
-    color-scheme: dark;
-    background: var(--color-canvas);
-  }
-
   body {
     height: 100vh;
-    width: 100vw;
     overflow: hidden;
-    background: var(--color-canvas);
-    color: var(--color-fg);
-    font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
   }
 
   button:not(:disabled),
@@ -68,44 +66,28 @@
   [role="tab"] {
     cursor: pointer;
   }
-
-  :focus-visible {
-    outline: 1px solid var(--color-fg);
-    outline-offset: 2px;
-  }
-
-  ::selection {
-    background: var(--color-fg);
-    color: var(--color-canvas);
-  }
-
-  ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
-
-  ::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background: var(--color-line);
-    border: 2px solid transparent;
-    background-clip: padding-box;
-    border-radius: 8px;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background-color: var(--color-line-active);
-  }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
+/* The study panel (Library / AI Tutor) needs a little more room than the kit's default list width. */
+.q-shell[data-tool="mind"] {
+  --q-sections-w: 320px;
+}
+
+/*
+ * Alpha Mind product logos are transparent PNGs drawn in one ink colour, so each tile keeps a fixed
+ * backing of the opposite tone in both themes (images, not UI chrome — they must not flip).
+ */
+.mind-logo-tile[data-mark="light"] {
+  background: #121215;
+  border-color: #27272a;
+}
+.mind-logo-tile[data-mark="dark"] {
+  background: #e4e4e7;
+  border-color: #d4d4d8;
+}
+
+/* Settings rows keep their selects compact beside the label (the kit input is full width by default). */
+.mind-select {
+  width: auto;
+  min-width: 180px;
 }
